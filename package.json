@@ -1,0 +1,42 @@
+{
+  "name": "nexus-whatsapp-api",
+  "version": "1.0.0",
+  "description": "API de automação WhatsApp com IA para relatórios de marketing",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "keywords": [
+    "whatsapp",
+    "twilio",
+    "marketing",
+    "ai",
+    "automation"
+  ],
+  "author": "Marcos",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "@aws-sdk/client-s3": "^3.478.0",
+    "@aws-sdk/s3-request-presigner": "^3.478.0",
+    "@anthropic-ai/sdk": "^0.27.0",
+    "express": "^4.18.2",
+    "twilio": "^4.19.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "node-cron": "^3.0.3",
+    "multer": "^1.4.5-lts.1",
+    "express-validator": "^7.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.7.0",
+    "nodemon": "^3.0.2"
+  }
+}
