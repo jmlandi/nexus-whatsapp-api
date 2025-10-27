@@ -6,7 +6,7 @@
 const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
 const aiService = require('./aiService');
-const twilioService = require('./twilioService');
+const whatsappService = require('./whatsappService');
 
 class ChatService {
   /**
@@ -237,7 +237,7 @@ class ChatService {
       const aiMessage = await this.addMessage(chat.id, aiResponse, 'agent');
 
       // Envia resposta via WhatsApp
-      const twilioResult = await twilioService.sendMessage(
+      const whatsappResult = await whatsappService.sendMessage(
         phoneNumber,
         aiResponse
       );
@@ -247,7 +247,7 @@ class ChatService {
       return {
         success: true,
         aiMessage,
-        twilioResult
+        whatsappResult
       };
 
     } catch (error) {
@@ -259,7 +259,7 @@ class ChatService {
           'Um membro da equipe WN7 entrará em contato em breve! 😊';
         
         await this.addMessage(chat.id, fallbackMessage, 'agent');
-        await twilioService.sendMessage(phoneNumber, fallbackMessage);
+        await whatsappService.sendMessage(phoneNumber, fallbackMessage);
         
         return {
           success: false,

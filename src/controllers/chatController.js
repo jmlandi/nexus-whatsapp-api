@@ -1,12 +1,12 @@
 /**
  * Controller de Chats
- * Gerencia operações de chat e envio de mensagens via Twilio
+ * Gerencia operações de chat e envio de mensagens via WhatsApp
  */
 
 const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
 const chatService = require('../services/chatService');
-const twilioService = require('../services/twilioService');
+const whatsappService = require('../services/whatsappService');
 
 class ChatController {
   /**
@@ -52,15 +52,15 @@ class ChatController {
   /**
    * Inicia novo chat enviando template do WhatsApp
    * POST /api/chat/send-template
-   * Body: { customerId, phoneNumberId, templateId, variables? }
+   * Body: { customerId, phoneNumberId, templateName, languageCode?, components? }
    */
   async sendTemplate(req, res) {
     try {
-      const { customerId, phoneNumberId, templateId, variables } = req.body;
+      const { customerId, phoneNumberId, templateName, languageCode, components } = req.body;
 
-      if (!customerId || !phoneNumberId || !templateId) {
+      if (!customerId || !phoneNumberId || !templateName) {
         return res.status(400).json({ 
-          error: 'customerId, phoneNumberId e templateId são obrigatórios' 
+          error: 'customerId, phoneNumberId e templateName são obrigatórios' 
         });
       }
 
@@ -95,17 +95,18 @@ class ChatController {
       // Cria novo chat
       chat = await chatService.createChat(customerId, phoneNumberId);
 
-      // Envia template via Twilio
-      const twilioResponse = await twilioService.sendTemplate(
+      // Envia template via WhatsApp
+      const whatsappResponse = await whatsappService.sendTemplate(
         phoneNumber.phoneNumber,
-        templateId,
-        variables
+        templateName,
+        languageCode || 'pt_BR',
+        components || []
       );
 
       // Registra mensagem no chat
       await chatService.addMessage(
         chat.id,
-        `Template enviado: ${templateId}`,
+        `Template enviado: ${templateName}`,
         'wa_template'
       );
 
@@ -114,7 +115,7 @@ class ChatController {
       res.status(201).json({
         message: 'Template enviado e chat iniciado com sucesso',
         chat,
-        twilioResponse
+        whatsappResponse
       });
     } catch (error) {
       logger.error(`Erro ao enviar template: ${error.message}`);

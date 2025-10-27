@@ -5,7 +5,7 @@
 
 const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
-const twilioService = require('../services/twilioService');
+const whatsappService = require('../services/whatsappService');
 
 class PhoneNumberController {
   /**
@@ -118,7 +118,7 @@ class PhoneNumberController {
         }
 
         // Valida formato do número
-        if (!twilioService.validatePhoneNumber(phoneNumber)) {
+        if (!whatsappService.validatePhoneNumber(phoneNumber)) {
           errors.push({ phoneNumber, error: 'Formato de número inválido' });
           continue;
         }
@@ -183,7 +183,7 @@ class PhoneNumberController {
       const updateData = {};
       if (phoneNumber !== undefined) {
         // Valida formato se fornecido
-        if (!twilioService.validatePhoneNumber(phoneNumber)) {
+        if (!whatsappService.validatePhoneNumber(phoneNumber)) {
           return res.status(400).json({ error: 'Formato de número inválido' });
         }
         updateData.phoneNumber = phoneNumber;

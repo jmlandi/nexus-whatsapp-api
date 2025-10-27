@@ -11,6 +11,7 @@ const phoneNumberRoutes = require('./phoneNumberRoutes');
 const reportRoutes = require('./reportRoutes');
 const messageRoutes = require('./messageRoutes');
 const chatRoutes = require('./chatRoutes');
+const templateRoutes = require('./templateRoutes');
 
 // Registra rotas de cada recurso
 router.use('/customer', customerRoutes);
@@ -18,5 +19,6 @@ router.use('/phone_number', phoneNumberRoutes);
 router.use('/report', reportRoutes);
 router.use('/message', messageRoutes);
 router.use('/chat', chatRoutes);
+router.use('/template', templateRoutes);
 
 module.exports = router;
