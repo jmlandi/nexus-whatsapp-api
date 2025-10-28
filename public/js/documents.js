@@ -17,105 +17,101 @@ async function loadDocuments(customerId = null) {
     renderDocuments();
   } catch (error) {
     console.error('Erro ao carregar documentos:', error);
-    document.getElementById('documentsContainer').innerHTML = 
-      '<p class="loading">Erro ao carregar documentos.</p>';
+    showError('Erro ao carregar documentos');
   }
 }
 
 /**
- * Carrega lista de clientes para os selects
+ * Carrega lista de clientes para o select
  */
 async function loadCustomersForSelect() {
   try {
     const data = await fetchAPI('/customer?pageSize=1000');
     customers = data.customers || [];
     
-    // Popula os selects
-    populateCustomerSelect('customerFilter', '', 'Todos os clientes');
-    populateCustomerSelect('uploadCustomerId', '', 'Selecione um cliente');
+    // Popula o select do modal
+    const select = document.getElementById('customerSelect');
+    if (select) {
+      select.innerHTML = '<option value="">Selecione um cliente...</option>' +
+        customers.map(customer => `
+          <option value="${customer.id}">
+            ${customer.firstName} ${customer.lastName}${customer.nickname ? ` (${customer.nickname})` : ''}
+          </option>
+        `).join('');
+    }
   } catch (error) {
     console.error('Erro ao carregar clientes:', error);
   }
 }
 
 /**
- * Popula um select com clientes
- */
-function populateCustomerSelect(selectId, defaultValue = '', defaultText = '') {
-  const select = document.getElementById(selectId);
-  if (!select) return;
-  
-  let options = defaultText ? `<option value="">${defaultText}</option>` : '';
-  
-  options += customers.map(customer => `
-    <option value="${customer.id}">
-      ${customer.firstName} ${customer.lastName}${customer.nickname ? ` (${customer.nickname})` : ''}
-    </option>
-  `).join('');
-  
-  select.innerHTML = options;
-  if (defaultValue) select.value = defaultValue;
-}
-
-/**
- * Renderiza lista de documentos
+ * Renderiza lista de documentos em grid
  */
 function renderDocuments() {
-  const container = document.getElementById('documentsContainer');
+  const grid = document.getElementById('documentsGrid');
   
   if (documents.length === 0) {
-    container.innerHTML = '<p class="loading">Nenhum documento encontrado.</p>';
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="empty-state-title">Nenhum documento encontrado</div>
+        <div class="empty-state-text">Faça upload de PDFs para começar</div>
+      </div>
+    `;
     return;
   }
   
-  const table = `
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Data do Relatório</th>
-          <th>Observações</th>
-          <th>Upload em</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${documents.map(doc => `
-          <tr>
-            <td>
-              <strong>${doc.customer.firstName} ${doc.customer.lastName}</strong>
-              ${doc.customer.nickname ? `<br><small style="color: var(--text-light);">${doc.customer.nickname}</small>` : ''}
-            </td>
-            <td>${formatDate(doc.reportTimestamp)}</td>
-            <td>${doc.observations || '<em>Sem observações</em>'}</td>
-            <td>${formatDate(doc.createdAt)}</td>
-            <td>
-              <button class="btn btn-secondary btn-sm view-doc-btn" data-url="${doc.reportUrl}">
-                👁️ Ver
-              </button>
-              <button class="btn btn-danger btn-sm delete-doc-btn" data-doc-id="${doc.id}">
-                🗑️
-              </button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+  grid.innerHTML = documents.map(doc => `
+    <div class="document-card">
+      <div class="document-card-icon">
+        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div class="document-card-content">
+        <div class="document-card-title">${doc.customer.firstName} ${doc.customer.lastName}</div>
+        ${doc.customer.nickname ? `<div class="document-card-subtitle">${doc.customer.nickname}</div>` : ''}
+        <div class="document-card-meta">
+          <span class="document-card-date">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            ${formatDate(doc.reportTimestamp)}
+          </span>
+        </div>
+        ${doc.observations ? `<div class="document-card-description">${doc.observations}</div>` : ''}
+      </div>
+      <div class="document-card-actions">
+        <button class="btn btn-secondary btn-sm view-doc-btn" data-url="${doc.reportUrl}" title="Ver PDF">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+        <button class="btn btn-danger btn-sm delete-doc-btn" data-doc-id="${doc.id}" title="Excluir">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
   
-  container.innerHTML = table;
-  
-  // Adiciona event listeners aos botões
+  // Adiciona event listeners
   document.querySelectorAll('.view-doc-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const url = e.target.closest('button').dataset.url;
+    btn.addEventListener('click', () => {
+      const url = btn.dataset.url;
       window.open(url, '_blank');
     });
   });
   
   document.querySelectorAll('.delete-doc-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const docId = e.target.closest('button').dataset.docId;
+    btn.addEventListener('click', () => {
+      const docId = parseInt(btn.dataset.docId);
       deleteDocument(docId);
     });
   });
@@ -126,119 +122,77 @@ function renderDocuments() {
  */
 function openUploadModal() {
   document.getElementById('uploadForm').reset();
-  document.getElementById('fileName').textContent = 'Nenhum arquivo selecionado';
-  document.getElementById('uploadProgress').style.display = 'none';
-  
-  // Define data de hoje como padrão
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('reportTimestamp').value = today;
-  
-  document.getElementById('uploadModal').classList.add('active');
+  document.getElementById('uploadModal').classList.remove('hidden');
 }
 
 /**
  * Fecha modal de upload
  */
 function closeUploadModal() {
-  document.getElementById('uploadModal').classList.remove('active');
+  document.getElementById('uploadModal').classList.add('hidden');
 }
 
 /**
- * Atualiza nome do arquivo selecionado
+ * Faz upload de documento
  */
-document.getElementById('documentFile')?.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  const fileNameDisplay = document.getElementById('fileName');
-  
-  if (file) {
-    fileNameDisplay.textContent = file.name;
-  } else {
-    fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
-  }
-});
-
-/**
- * Faz upload do documento
- */
-document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  const customerId = document.getElementById('uploadCustomerId').value;
-  const file = document.getElementById('documentFile').files[0];
-  const reportTimestamp = document.getElementById('reportTimestamp').value;
+  const customerId = parseInt(document.getElementById('customerSelect').value);
+  const reportDate = document.getElementById('reportDate').value;
   const observations = document.getElementById('observations').value;
+  const fileInput = document.getElementById('fileInput');
   
-  if (!customerId) {
-    showError('Selecione um cliente');
-    return;
-  }
-  
-  if (!file) {
+  if (!fileInput.files[0]) {
     showError('Selecione um arquivo PDF');
     return;
   }
   
-  const btn = document.getElementById('uploadBtn');
-  const progress = document.getElementById('uploadProgress');
-  const progressFill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText');
-  
+  const btn = document.getElementById('confirmUploadBtn');
+  const btnText = btn.querySelector('span');
+  const originalText = btnText.textContent;
   btn.disabled = true;
-  btn.textContent = 'Enviando...';
-  progress.style.display = 'block';
+  btnText.textContent = 'Enviando...';
   
   try {
-    // Cria FormData
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileInput.files[0]);
     formData.append('customerId', customerId);
-    if (reportTimestamp) {
-      formData.append('reportTimestamp', new Date(reportTimestamp).toISOString());
-    }
+    formData.append('reportTimestamp', new Date(reportDate).toISOString());
     if (observations) {
       formData.append('observations', observations);
     }
     
-    // Simula progresso
-    let progressValue = 0;
-    const progressInterval = setInterval(() => {
-      progressValue += 10;
-      if (progressValue <= 90) {
-        progressFill.style.width = progressValue + '%';
-      }
-    }, 200);
-    
-    // Faz upload
-    await fetchAPI('/document/upload', {
+    const response = await fetch('/document', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
       body: formData
     });
     
-    clearInterval(progressInterval);
-    progressFill.style.width = '100%';
-    progressText.textContent = 'Enviado com sucesso!';
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao fazer upload');
+    }
     
     showSuccess('Documento enviado com sucesso!');
-    
-    setTimeout(() => {
-      closeUploadModal();
-      loadDocuments();
-    }, 1000);
+    closeUploadModal();
+    loadDocuments();
   } catch (error) {
     console.error('Erro ao fazer upload:', error);
-    showError(error.message || 'Erro ao enviar documento');
-    progress.style.display = 'none';
+    showError(error.message || 'Erro ao fazer upload do documento');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Enviar Documento';
+    btnText.textContent = originalText;
   }
 });
 
 /**
- * Deleta um documento
+ * Deleta documento
  */
 async function deleteDocument(documentId) {
-  if (!confirm('Tem certeza que deseja deletar este documento?')) {
+  if (!confirm('Deseja realmente excluir este documento?')) {
     return;
   }
   
@@ -247,54 +201,48 @@ async function deleteDocument(documentId) {
       method: 'DELETE'
     });
     
-    showSuccess('Documento deletado com sucesso!');
+    showSuccess('Documento excluído com sucesso!');
     loadDocuments();
   } catch (error) {
-    console.error('Erro ao deletar documento:', error);
-    showError(error.message || 'Erro ao deletar documento');
+    console.error('Erro ao excluir documento:', error);
+    showError(error.message || 'Erro ao excluir documento');
   }
 }
 
 /**
- * Filtra documentos por cliente
+ * Formata data
  */
-document.getElementById('customerFilter')?.addEventListener('change', (e) => {
-  const customerId = e.target.value;
-  loadDocuments(customerId || null);
-});
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric' 
+  });
+}
 
 /**
- * Busca documentos
+ * Mostra mensagem de sucesso
  */
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-  searchInput.addEventListener('input', debounce((e) => {
-    const search = e.target.value.toLowerCase();
-    
-    if (!search) {
-      renderDocuments();
-      return;
-    }
-    
-    const filtered = documents.filter(doc => {
-      const customerName = `${doc.customer.firstName} ${doc.customer.lastName}`.toLowerCase();
-      const nickname = (doc.customer.nickname || '').toLowerCase();
-      const observations = (doc.observations || '').toLowerCase();
-      return customerName.includes(search) || nickname.includes(search) || observations.includes(search);
-    });
-    
-    const originalDocs = documents;
-    documents = filtered;
-    renderDocuments();
-    documents = originalDocs;
-  }, 300));
+function showSuccess(message) {
+  // Implementar toast/notification
+  alert(message);
+}
+
+/**
+ * Mostra mensagem de erro
+ */
+function showError(message) {
+  // Implementar toast/notification
+  alert(message);
 }
 
 // Carrega dados ao iniciar
 loadCustomersForSelect();
 loadDocuments();
 
-// Event listeners para botões
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
@@ -315,10 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cancelUploadBtn) {
     cancelUploadBtn.addEventListener('click', closeUploadModal);
   }
+  
+  // Define data padrão como hoje
+  const reportDateInput = document.getElementById('reportDate');
+  if (reportDateInput) {
+    reportDateInput.valueAsDate = new Date();
+  }
 });
-
-// Verifica se deve abrir modal automaticamente
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('action') === 'upload') {
-  setTimeout(openUploadModal, 100);
-}

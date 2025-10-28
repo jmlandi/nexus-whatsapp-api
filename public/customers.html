@@ -4,123 +4,108 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexus - Clientes</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/common.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>🔷 Nexus</h2>
-      </div>
-      
+  <div class="page-layout">
+    <aside class="page-sidebar">
+      <div class="sidebar-header"><div class="sidebar-title">Nexus</div></div>
       <nav class="sidebar-nav">
-        <a href="/dashboard.html" class="nav-item">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-        <a href="/customers.html" class="nav-item active">
-          <span class="icon">👥</span>
-          <span>Clientes</span>
-        </a>
-        <a href="/documents.html" class="nav-item">
-          <span class="icon">📄</span>
-          <span>Documentos</span>
-        </a>
-        <a href="/simulator.html" class="nav-item">
-          <span class="icon">💬</span>
-          <span>Simulador</span>
-        </a>
+        <a href="/dashboard.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Dashboard</span></a>
+        <a href="/customers.html" class="nav-link active"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Clientes</span></a>
+        <a href="/documents.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Documentos</span></a>
+        <a href="/simulator.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg><span>Simulador</span></a>
       </nav>
-      
-      <div class="sidebar-footer">
-        <div class="user-info" id="userInfo">
-          <span class="user-avatar">👤</span>
-          <div class="user-details">
-            <span class="user-name">Carregando...</span>
-          </div>
-        </div>
-        <button class="btn-logout" id="logoutBtn">
-          <span>🚪</span> Sair
-        </button>
+      <div style="margin-top: auto; padding: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+        <button id="logoutBtn" class="btn btn-secondary w-full"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Sair</span></button>
       </div>
     </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-      <header class="content-header">
-        <div>
-          <h1>Clientes</h1>
-          <p class="subtitle">Gerencie seus clientes e telefones</p>
+    <main class="page-main">
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1 class="page-title">Clientes</h1>
+            <p class="page-subtitle">Gerencie seus clientes e telefones de contato</p>
+          </div>
+          <button id="newCustomerBtn" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Novo Cliente</span>
+          </button>
         </div>
-        <button class="btn btn-primary" id="newCustomerBtn">
-          ➕ Novo Cliente
-        </button>
-      </header>
-      
-      <div class="filters-bar">
-        <input 
-          type="search" 
-          id="searchInput" 
-          placeholder="Buscar cliente..." 
-          class="search-input"
-        >
       </div>
-      
-      <div id="customersContainer" class="table-container">
-        <p class="loading">Carregando clientes...</p>
+      <div class="page-content">
+        <div class="data-table-container">
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Apelido</th>
+                  <th>Telefones</th>
+                  <th>Documentos</th>
+                  <th>Conversas</th>
+                  <th style="width: 120px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="customersTableBody">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <div class="empty-state-icon"><svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
+                      <div class="empty-state-title">Nenhum cliente cadastrado</div>
+                      <div class="empty-state-text">Clique em "Novo Cliente" para começar</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </main>
   </div>
-
-  <!-- Modal de Cliente -->
-  <div id="customerModal" class="modal">
-    <div class="modal-content">
+  <div id="customerModal" class="modal-overlay hidden">
+    <div class="modal">
       <div class="modal-header">
-        <h2 id="modalTitle">Novo Cliente</h2>
-        <button class="btn-close" id="closeModalBtn">✕</button>
+        <h2 class="modal-title" id="modalTitle">Novo Cliente</h2>
+        <button type="button" id="closeModalBtn" class="modal-close" aria-label="Fechar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
-      
-      <form id="customerForm" class="modal-body">
-        <input type="hidden" id="customerId">
-        
-        <div class="form-row">
+      <div class="modal-body">
+        <form id="customerForm">
+          <input type="hidden" id="customerId">
           <div class="form-group">
-            <label for="firstName">Nome *</label>
-            <input type="text" id="firstName" required>
+            <label class="form-label">Nome</label>
+            <input type="text" id="firstName" class="form-input" required placeholder="Digite o nome">
           </div>
-          
           <div class="form-group">
-            <label for="lastName">Sobrenome *</label>
-            <input type="text" id="lastName" required>
+            <label class="form-label">Sobrenome</label>
+            <input type="text" id="lastName" class="form-input" required placeholder="Digite o sobrenome">
           </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="nickname">Apelido</label>
-          <input type="text" id="nickname" placeholder="Opcional">
-        </div>
-        
-        <div class="form-section">
-          <h3>Telefones</h3>
-          <div id="phonesContainer"></div>
-          <button type="button" class="btn btn-secondary btn-sm" id="addPhoneBtn">
-            ➕ Adicionar Telefone
-          </button>
-        </div>
-        
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="cancelBtn">
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary" id="saveCustomerBtn">
-            Salvar
-          </button>
-        </div>
-      </form>
+          <div class="form-group">
+            <label class="form-label">Apelido</label>
+            <input type="text" id="nickname" class="form-input" placeholder="Apelido (opcional)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefones</label>
+            <div id="phoneNumbersContainer"></div>
+            <button type="button" id="addPhoneBtn" class="btn btn-secondary mt-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Adicionar Telefone</span>
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+        <button type="submit" form="customerForm" id="saveBtn" class="btn btn-primary">Salvar</button>
+      </div>
     </div>
   </div>
-
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/customers.js"></script>

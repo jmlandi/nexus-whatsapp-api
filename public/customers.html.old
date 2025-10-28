@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus - Clientes</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🔷 Nexus</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customers.html" class="nav-item active">
+          <span class="icon">👥</span>
+          <span>Clientes</span>
+        </a>
+        <a href="/documents.html" class="nav-item">
+          <span class="icon">📄</span>
+          <span>Documentos</span>
+        </a>
+        <a href="/simulator.html" class="nav-item">
+          <span class="icon">💬</span>
+          <span>Simulador</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo">
+          <span class="user-avatar">👤</span>
+          <div class="user-details">
+            <span class="user-name">Carregando...</span>
+          </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">
+          <span>🚪</span> Sair
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <div>
+          <h1>Clientes</h1>
+          <p class="subtitle">Gerencie seus clientes e telefones</p>
+        </div>
+        <button class="btn btn-primary" id="newCustomerBtn">
+          ➕ Novo Cliente
+        </button>
+      </header>
+      
+      <div class="filters-bar">
+        <input 
+          type="search" 
+          id="searchInput" 
+          placeholder="Buscar cliente..." 
+          class="search-input"
+        >
+      </div>
+      
+      <div id="customersContainer" class="table-container">
+        <p class="loading">Carregando clientes...</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Cliente -->
+  <div id="customerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Novo Cliente</h2>
+        <button class="btn-close" id="closeModalBtn">✕</button>
+      </div>
+      
+      <form id="customerForm" class="modal-body">
+        <input type="hidden" id="customerId">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">Nome *</label>
+            <input type="text" id="firstName" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="lastName">Sobrenome *</label>
+            <input type="text" id="lastName" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="nickname">Apelido</label>
+          <input type="text" id="nickname" placeholder="Opcional">
+        </div>
+        
+        <div class="form-section">
+          <h3>Telefones</h3>
+          <div id="phonesContainer"></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="addPhoneBtn">
+            ➕ Adicionar Telefone
+          </button>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" id="saveCustomerBtn">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/customers.js"></script>
+</body>
+</html>

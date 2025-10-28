@@ -4,142 +4,89 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexus - Documentos</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/common.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>🔷 Nexus</h2>
-      </div>
-      
+  <div class="page-layout">
+    <aside class="page-sidebar">
+      <div class="sidebar-header"><div class="sidebar-title">Nexus</div></div>
       <nav class="sidebar-nav">
-        <a href="/dashboard.html" class="nav-item">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-        <a href="/customers.html" class="nav-item">
-          <span class="icon">👥</span>
-          <span>Clientes</span>
-        </a>
-        <a href="/documents.html" class="nav-item active">
-          <span class="icon">📄</span>
-          <span>Documentos</span>
-        </a>
-        <a href="/simulator.html" class="nav-item">
-          <span class="icon">💬</span>
-          <span>Simulador</span>
-        </a>
+        <a href="/dashboard.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Dashboard</span></a>
+        <a href="/customers.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Clientes</span></a>
+        <a href="/documents.html" class="nav-link active"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Documentos</span></a>
+        <a href="/simulator.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg><span>Simulador</span></a>
       </nav>
-      
-      <div class="sidebar-footer">
-        <div class="user-info" id="userInfo">
-          <span class="user-avatar">👤</span>
-          <div class="user-details">
-            <span class="user-name">Carregando...</span>
-          </div>
-        </div>
-        <button class="btn-logout" id="logoutBtn">
-          <span>🚪</span> Sair
-        </button>
+      <div style="margin-top: auto; padding: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+        <button id="logoutBtn" class="btn btn-secondary w-full"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Sair</span></button>
       </div>
     </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-      <header class="content-header">
-        <div>
-          <h1>Documentos</h1>
-          <p class="subtitle">PDFs e relatórios dos clientes</p>
+    <main class="page-main">
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1 class="page-title">Documentos</h1>
+            <p class="page-subtitle">Gerencie relatórios e PDFs dos clientes</p>
+          </div>
+          <button id="uploadDocBtn" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <span>Upload PDF</span>
+          </button>
         </div>
-        <button class="btn btn-primary" id="uploadDocBtn">
-          ⬆️ Upload de Documento
-        </button>
-      </header>
-      
-      <div class="filters-bar">
-        <select id="customerFilter" class="filter-select">
-          <option value="">Todos os clientes</option>
-        </select>
-        
-        <input 
-          type="search" 
-          id="searchInput" 
-          placeholder="Buscar documento..." 
-          class="search-input"
-        >
       </div>
-      
-      <div id="documentsContainer" class="table-container">
-        <p class="loading">Carregando documentos...</p>
+      <div class="page-content">
+        <div class="documents-grid" id="documentsGrid">
+          <div class="empty-state">
+            <div class="empty-state-icon"><svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+            <div class="empty-state-title">Nenhum documento encontrado</div>
+            <div class="empty-state-text">Faça upload de PDFs para começar</div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
-
-  <!-- Modal de Upload -->
-  <div id="uploadModal" class="modal">
-    <div class="modal-content">
+  <div id="uploadModal" class="modal-overlay hidden">
+    <div class="modal">
       <div class="modal-header">
-        <h2>Upload de Documento</h2>
-        <button class="btn-close" id="closeUploadModalBtn">✕</button>
+        <h2 class="modal-title">Upload de Documento</h2>
+        <button type="button" id="closeUploadModalBtn" class="modal-close" aria-label="Fechar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
-      
-      <form id="uploadForm" class="modal-body">
-        <div class="form-group">
-          <label for="uploadCustomerId">Cliente *</label>
-          <select id="uploadCustomerId" required>
-            <option value="">Selecione um cliente</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="documentFile">Arquivo PDF *</label>
-          <div class="file-input-wrapper">
-            <input 
-              type="file" 
-              id="documentFile" 
-              accept=".pdf" 
-              required
-            >
-            <span class="file-input-label">Escolher arquivo</span>
-            <span class="file-name" id="fileName">Nenhum arquivo selecionado</span>
+      <div class="modal-body">
+        <form id="uploadForm">
+          <div class="form-group">
+            <label class="form-label">Cliente</label>
+            <select id="customerSelect" class="form-input" required>
+              <option value="">Selecione um cliente...</option>
+            </select>
           </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="reportTimestamp">Data do Relatório</label>
-          <input type="date" id="reportTimestamp">
-        </div>
-        
-        <div class="form-group">
-          <label for="observations">Observações</label>
-          <textarea 
-            id="observations" 
-            rows="3" 
-            placeholder="Observações sobre o documento (opcional)"
-          ></textarea>
-        </div>
-        
-        <div id="uploadProgress" style="display: none;">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
+          <div class="form-group">
+            <label class="form-label">Data do Relatório</label>
+            <input type="date" id="reportDate" class="form-input" required>
           </div>
-          <p class="progress-text" id="progressText">Enviando...</p>
-        </div>
-        
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="cancelUploadBtn">
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary" id="uploadBtn">
-            Enviar Documento
-          </button>
-        </div>
-      </form>
+          <div class="form-group">
+            <label class="form-label">Observações</label>
+            <textarea id="observations" class="form-input" rows="3" placeholder="Observações sobre o relatório (opcional)"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Arquivo PDF</label>
+            <input type="file" id="fileInput" class="form-input" accept=".pdf" required>
+            <div class="text-xs text-muted mt-1">Apenas arquivos PDF são permitidos</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelUploadBtn" class="btn btn-secondary">Cancelar</button>
+        <button type="submit" form="uploadForm" id="confirmUploadBtn" class="btn btn-primary">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <span>Upload</span>
+        </button>
+      </div>
     </div>
   </div>
-
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/documents.js"></script>
