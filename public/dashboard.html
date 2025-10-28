@@ -4,122 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexus - Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <style>
+    body { margin: 0; height: 100vh; overflow: hidden; }
+    .dashboard-layout { display: flex; height: 100vh; }
+    .dashboard-sidebar { width: 280px; background: var(--color-surface); border-right: 1px solid var(--color-border-light); display: flex; flex-direction: column; box-shadow: var(--shadow-md); }
+    .dashboard-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .dashboard-header { padding: var(--spacing-xl); background: var(--color-surface); border-bottom: 1px solid var(--color-border-light); backdrop-filter: blur(10px); box-shadow: var(--shadow-sm); }
+    .dashboard-title { font-size: 1.75rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-xs); letter-spacing: -0.02em; }
+    .dashboard-subtitle { font-size: 0.875rem; color: var(--color-text-light); }
+    .dashboard-content { flex: 1; padding: var(--spacing-xl); overflow-y: auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
+    .stat-card { background: var(--color-surface); padding: var(--spacing-xl); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-border-light); display: flex; align-items: center; gap: var(--spacing-lg); transition: all var(--transition-base); }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .stat-icon { width: 60px; height: 60px; background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); }
+    .stat-icon svg { color: var(--color-surface); }
+    .stat-content h3 { font-size: 2rem; font-weight: 700; color: var(--color-text); margin: 0 0 var(--spacing-xs) 0; letter-spacing: -0.02em; }
+    .stat-content p { font-size: 0.875rem; color: var(--color-text-light); margin: 0; font-weight: 500; }
+    .welcome-card { background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-light) 100%); padding: var(--spacing-2xl); border-radius: var(--radius-xl); color: var(--color-surface); box-shadow: var(--shadow-lg); margin-bottom: var(--spacing-xl); }
+    .welcome-title { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-sm); letter-spacing: -0.01em; }
+    .welcome-text { font-size: 1rem; opacity: 0.9; line-height: 1.6; }
+    .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); }
+    .action-btn { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-lg); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); text-decoration: none; color: var(--color-text); font-weight: 600; transition: all var(--transition-base); box-shadow: var(--shadow-sm); }
+    .action-btn:hover { background: var(--color-primary); color: var(--color-surface); border-color: var(--color-primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .action-btn svg { flex-shrink: 0; }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>🔷 Nexus</h2>
-      </div>
-      
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-header"><div class="sidebar-title">Nexus</div></div>
       <nav class="sidebar-nav">
-        <a href="/dashboard.html" class="nav-item active">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-        <a href="/customers.html" class="nav-item">
-          <span class="icon">👥</span>
-          <span>Clientes</span>
-        </a>
-        <a href="/documents.html" class="nav-item">
-          <span class="icon">📄</span>
-          <span>Documentos</span>
-        </a>
-        <a href="/simulator.html" class="nav-item">
-          <span class="icon">💬</span>
-          <span>Simulador</span>
-        </a>
+        <a href="/dashboard.html" class="nav-link active"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Dashboard</span></a>
+        <a href="/customers.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg><span>Clientes</span></a>
+        <a href="/documents.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><span>Documentos</span></a>
+        <a href="/simulator.html" class="nav-link"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg><span>Simulador</span></a>
       </nav>
-      
-      <div class="sidebar-footer">
-        <div class="user-info" id="userInfo">
-          <span class="user-avatar">👤</span>
-          <div class="user-details">
-            <span class="user-name">Carregando...</span>
-          </div>
-        </div>
-        <button class="btn-logout" id="logoutBtn">
-          <span>🚪</span> Sair
-        </button>
+      <div style="margin-top: auto; padding: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+        <button id="logoutBtn" class="btn btn-secondary w-full"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg><span>Sair</span></button>
       </div>
     </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-      <header class="content-header">
-        <h1>Dashboard</h1>
-        <p class="subtitle">Visão geral do sistema</p>
-      </header>
-      
-      <div class="dashboard-grid">
-        <!-- Cards de estatísticas -->
-        <div class="stat-card">
-          <div class="stat-icon">👥</div>
-          <div class="stat-content">
-            <h3 id="totalCustomers">-</h3>
-            <p>Total de Clientes</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📄</div>
-          <div class="stat-content">
-            <h3 id="totalDocuments">-</h3>
-            <p>Documentos</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">💬</div>
-          <div class="stat-content">
-            <h3 id="totalChats">-</h3>
-            <p>Conversas Ativas</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📞</div>
-          <div class="stat-content">
-            <h3 id="totalPhones">-</h3>
-            <p>Números Cadastrados</p>
-          </div>
-        </div>
+    <main class="dashboard-main">
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">Visão geral do sistema</p>
       </div>
-      
-      <div class="dashboard-section">
-        <h2>Ações Rápidas</h2>
-        <div class="quick-actions">
-          <a href="/customers.html?action=new" class="action-card">
-            <span class="action-icon">➕</span>
-            <h3>Novo Cliente</h3>
-            <p>Adicionar um novo cliente</p>
-          </a>
-          
-          <a href="/documents.html?action=upload" class="action-card">
-            <span class="action-icon">⬆️</span>
-            <h3>Upload de Documento</h3>
-            <p>Enviar PDF ou relatório</p>
-          </a>
-          
-          <a href="/simulator.html" class="action-card">
-            <span class="action-icon">🎮</span>
-            <h3>Testar IA</h3>
-            <p>Simular conversa com cliente</p>
-          </a>
+      <div class="dashboard-content">
+        <div class="welcome-card">
+          <h2 class="welcome-title">Bem-vindo ao Nexus</h2>
+          <p class="welcome-text">Sistema de gestão de clientes e automação com IA para análise de relatórios</p>
         </div>
-      </div>
-      
-      <div class="dashboard-section">
-        <h2>Clientes Recentes</h2>
-        <div id="recentCustomers" class="table-container">
-          <p class="loading">Carregando...</p>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon"><svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg></div><div class="stat-content"><h3 id="totalCustomers">-</h3><p>Total de Clientes</p></div></div>
+          <div class="stat-card"><div class="stat-icon"><svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></div><div class="stat-content"><h3 id="totalDocuments">-</h3><p>Documentos</p></div></div>
+          <div class="stat-card"><div class="stat-icon"><svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div><div class="stat-content"><h3 id="totalChats">-</h3><p>Conversas Ativas</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2 class="card-title">Ações Rápidas</h2></div>
+          <div class="card-body">
+            <div class="quick-actions">
+              <a href="/customers.html" class="action-btn"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg><span>Novo Cliente</span></a>
+              <a href="/documents.html" class="action-btn"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg><span>Upload PDF</span></a>
+              <a href="/simulator.html" class="action-btn"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg><span>Testar IA</span></a>
+            </div>
+          </div>
         </div>
       </div>
     </main>
   </div>
-
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/dashboard.js"></script>
