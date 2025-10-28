@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus - Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🔷 Nexus</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="nav-item active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customers.html" class="nav-item">
+          <span class="icon">👥</span>
+          <span>Clientes</span>
+        </a>
+        <a href="/documents.html" class="nav-item">
+          <span class="icon">📄</span>
+          <span>Documentos</span>
+        </a>
+        <a href="/simulator.html" class="nav-item">
+          <span class="icon">💬</span>
+          <span>Simulador</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo">
+          <span class="user-avatar">👤</span>
+          <div class="user-details">
+            <span class="user-name">Carregando...</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+          <span>🚪</span> Sair
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <h1>Dashboard</h1>
+        <p class="subtitle">Visão geral do sistema</p>
+      </header>
+      
+      <div class="dashboard-grid">
+        <!-- Cards de estatísticas -->
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <h3 id="totalCustomers">-</h3>
+            <p>Total de Clientes</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">📄</div>
+          <div class="stat-content">
+            <h3 id="totalDocuments">-</h3>
+            <p>Documentos</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">💬</div>
+          <div class="stat-content">
+            <h3 id="totalChats">-</h3>
+            <p>Conversas Ativas</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">📞</div>
+          <div class="stat-content">
+            <h3 id="totalPhones">-</h3>
+            <p>Números Cadastrados</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashboard-section">
+        <h2>Ações Rápidas</h2>
+        <div class="quick-actions">
+          <a href="/customers.html?action=new" class="action-card">
+            <span class="action-icon">➕</span>
+            <h3>Novo Cliente</h3>
+            <p>Adicionar um novo cliente</p>
+          </a>
+          
+          <a href="/documents.html?action=upload" class="action-card">
+            <span class="action-icon">⬆️</span>
+            <h3>Upload de Documento</h3>
+            <p>Enviar PDF ou relatório</p>
+          </a>
+          
+          <a href="/simulator.html" class="action-card">
+            <span class="action-icon">🎮</span>
+            <h3>Testar IA</h3>
+            <p>Simular conversa com cliente</p>
+          </a>
+        </div>
+      </div>
+      
+      <div class="dashboard-section">
+        <h2>Clientes Recentes</h2>
+        <div id="recentCustomers" class="table-container">
+          <p class="loading">Carregando...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

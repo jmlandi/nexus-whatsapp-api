@@ -28,19 +28,24 @@ services:
       DATABASE_URL: postgresql://nexus_user:nexus_password@postgres:5432/nexus_db?schema=public
       NODE_ENV: development
       PORT: 3000
-      # Twilio - substitua com suas credenciais
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
-      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
-      # AWS S3 - substitua com suas credenciais
+      # WhatsApp Business API (Meta)
+      WHATSAPP_API_VERSION: ${WHATSAPP_API_VERSION:-v21.0}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      WHATSAPP_BUSINESS_ACCOUNT_ID: ${WHATSAPP_BUSINESS_ACCOUNT_ID}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN}
+      WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:-nexus_verify_token}
+      # AWS S3
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
-      # Anthropic AI - substitua com sua API key
+      # Anthropic AI
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
       ANTHROPIC_MAX_TOKENS: ${ANTHROPIC_MAX_TOKENS:-1024}
+      # JWT Authentication
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       # Configurações da aplicação
       CHAT_TIMEOUT_MINUTES: 15
       MAX_PAGE_SIZE: 100
@@ -49,11 +54,13 @@ services:
       - "3000:3000"
     volumes:
       - ./src:/app/src
+      - ./public:/app/public
+      - ./prisma:/app/prisma
       - ./logs:/app/logs
       - /app/node_modules
     networks:
       - nexus-network
-    command: npm run dev
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
 
   # PgAdmin - Interface web para PostgreSQL (opcional)
   pgadmin:

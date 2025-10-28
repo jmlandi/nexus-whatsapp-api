@@ -1,0 +1,286 @@
+const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const prisma = require('../utils/prisma');
+const logger = require('../utils/logger');
+
+// Configuração do S3
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+// Configuração do Multer para armazenar em memória
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB
+  },
+  fileFilter: (req, file, cb) => {
+    // Aceita apenas PDFs
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas arquivos PDF são permitidos'), false);
+    }
+  }
+});
+
+/**
+ * Upload de documento (PDF) para um cliente
+ * POST /api/document/upload
+ */
+const uploadDocument = async (req, res) => {
+  try {
+    const { customerId, observations, reportTimestamp } = req.body;
+    const file = req.file;
+
+    // Validação
+    if (!customerId) {
+      return res.status(400).json({
+        error: 'Cliente não especificado',
+        message: 'O ID do cliente é obrigatório'
+      });
+    }
+
+    if (!file) {
+      return res.status(400).json({
+        error: 'Arquivo não enviado',
+        message: 'É necessário enviar um arquivo PDF'
+      });
+    }
+
+    // Verifica se o cliente existe
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId }
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        error: 'Cliente não encontrado',
+        message: 'O cliente especificado não existe'
+      });
+    }
+
+    // Gera nome único para o arquivo
+    const timestamp = Date.now();
+    const fileName = `reports/${customerId}/${timestamp}-${file.originalname}`;
+
+    // Upload para o S3
+    const uploadParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: file.mimetype
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+
+    // URL do arquivo no S3
+    const reportUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
+    // Salva o registro no banco
+    const report = await prisma.report.create({
+      data: {
+        customerId,
+        reportUrl,
+        reportTimestamp: reportTimestamp ? new Date(reportTimestamp) : new Date(),
+        observations: observations || null
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            nickname: true
+          }
+        }
+      }
+    });
+
+    logger.info('Documento enviado com sucesso', {
+      reportId: report.id,
+      customerId,
+      fileName
+    });
+
+    res.status(201).json({
+      message: 'Documento enviado com sucesso',
+      report
+    });
+  } catch (error) {
+    logger.error('Erro ao fazer upload do documento', { error: error.message });
+    res.status(500).json({
+      error: 'Erro no servidor',
+      message: 'Ocorreu um erro ao fazer upload do documento'
+    });
+  }
+};
+
+/**
+ * Lista documentos de um cliente
+ * GET /api/document/customer/:customerId
+ */
+const getCustomerDocuments = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = Math.min(
+      parseInt(req.query.pageSize) || 20,
+      parseInt(process.env.MAX_PAGE_SIZE) || 100
+    );
+
+    const skip = (page - 1) * pageSize;
+
+    // Busca os documentos
+    const [documents, total] = await Promise.all([
+      prisma.report.findMany({
+        where: {
+          customerId,
+          isActive: true
+        },
+        include: {
+          customer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              nickname: true
+            }
+          }
+        },
+        orderBy: { reportTimestamp: 'desc' },
+        skip,
+        take: pageSize
+      }),
+      prisma.report.count({
+        where: {
+          customerId,
+          isActive: true
+        }
+      })
+    ]);
+
+    res.json({
+      documents,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (error) {
+    logger.error('Erro ao buscar documentos', { error: error.message });
+    res.status(500).json({
+      error: 'Erro no servidor',
+      message: 'Ocorreu um erro ao buscar os documentos'
+    });
+  }
+};
+
+/**
+ * Lista todos os documentos
+ * GET /api/document
+ */
+const getAllDocuments = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = Math.min(
+      parseInt(req.query.pageSize) || 20,
+      parseInt(process.env.MAX_PAGE_SIZE) || 100
+    );
+
+    const skip = (page - 1) * pageSize;
+
+    // Busca os documentos
+    const [documents, total] = await Promise.all([
+      prisma.report.findMany({
+        where: { isActive: true },
+        include: {
+          customer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              nickname: true
+            }
+          }
+        },
+        orderBy: { reportTimestamp: 'desc' },
+        skip,
+        take: pageSize
+      }),
+      prisma.report.count({
+        where: { isActive: true }
+      })
+    ]);
+
+    res.json({
+      documents,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (error) {
+    logger.error('Erro ao buscar documentos', { error: error.message });
+    res.status(500).json({
+      error: 'Erro no servidor',
+      message: 'Ocorreu um erro ao buscar os documentos'
+    });
+  }
+};
+
+/**
+ * Deleta um documento (soft delete)
+ * DELETE /api/document/:id
+ */
+const deleteDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verifica se o documento existe
+    const document = await prisma.report.findUnique({
+      where: { id }
+    });
+
+    if (!document) {
+      return res.status(404).json({
+        error: 'Documento não encontrado',
+        message: 'O documento especificado não existe'
+      });
+    }
+
+    // Soft delete
+    await prisma.report.update({
+      where: { id },
+      data: { isActive: false }
+    });
+
+    logger.info('Documento deletado', { reportId: id });
+
+    res.json({
+      message: 'Documento deletado com sucesso'
+    });
+  } catch (error) {
+    logger.error('Erro ao deletar documento', { error: error.message });
+    res.status(500).json({
+      error: 'Erro no servidor',
+      message: 'Ocorreu um erro ao deletar o documento'
+    });
+  }
+};
+
+module.exports = {
+  upload,
+  uploadDocument,
+  getCustomerDocuments,
+  getAllDocuments,
+  deleteDocument
+};

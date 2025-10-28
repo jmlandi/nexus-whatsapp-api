@@ -5,6 +5,7 @@
 
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -18,6 +19,9 @@ const PORT = process.env.PORT || 3000;
 // Middlewares de segurança
 app.use(helmet());
 app.use(cors());
+
+// Servir arquivos estáticos (interface web)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Rate limiting - previne abuso da API
 const limiter = rateLimit({
@@ -46,10 +50,28 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Rota para interface web de chat
+app.get('/chat', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/chat.html'));
+});
+
 // Rotas da API
 app.use('/api', routes);
 
-// Tratamento de rota não encontrada
+// Tratamento de rota não encontrada (API)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Rota não encontrada',
+    path: req.path
+  });
+});
+
+// Redireciona root para a interface de login
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// Tratamento de rota não encontrada (Geral)
 app.use((req, res) => {
   res.status(404).json({ 
     error: 'Rota não encontrada',

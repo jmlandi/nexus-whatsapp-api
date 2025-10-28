@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus - Documentos</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🔷 Nexus</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customers.html" class="nav-item">
+          <span class="icon">👥</span>
+          <span>Clientes</span>
+        </a>
+        <a href="/documents.html" class="nav-item active">
+          <span class="icon">📄</span>
+          <span>Documentos</span>
+        </a>
+        <a href="/simulator.html" class="nav-item">
+          <span class="icon">💬</span>
+          <span>Simulador</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo">
+          <span class="user-avatar">👤</span>
+          <div class="user-details">
+            <span class="user-name">Carregando...</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+          <span>🚪</span> Sair
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <div>
+          <h1>Documentos</h1>
+          <p class="subtitle">PDFs e relatórios dos clientes</p>
+        </div>
+        <button class="btn btn-primary" onclick="openUploadModal()">
+          ⬆️ Upload de Documento
+        </button>
+      </header>
+      
+      <div class="filters-bar">
+        <select id="customerFilter" class="filter-select">
+          <option value="">Todos os clientes</option>
+        </select>
+        
+        <input 
+          type="search" 
+          id="searchInput" 
+          placeholder="Buscar documento..." 
+          class="search-input"
+        >
+      </div>
+      
+      <div id="documentsContainer" class="table-container">
+        <p class="loading">Carregando documentos...</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Upload -->
+  <div id="uploadModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Upload de Documento</h2>
+        <button class="btn-close" onclick="closeUploadModal()">✕</button>
+      </div>
+      
+      <form id="uploadForm" class="modal-body">
+        <div class="form-group">
+          <label for="uploadCustomerId">Cliente *</label>
+          <select id="uploadCustomerId" required>
+            <option value="">Selecione um cliente</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="documentFile">Arquivo PDF *</label>
+          <div class="file-input-wrapper">
+            <input 
+              type="file" 
+              id="documentFile" 
+              accept=".pdf" 
+              required
+            >
+            <span class="file-input-label">Escolher arquivo</span>
+            <span class="file-name" id="fileName">Nenhum arquivo selecionado</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="reportTimestamp">Data do Relatório</label>
+          <input type="date" id="reportTimestamp">
+        </div>
+        
+        <div class="form-group">
+          <label for="observations">Observações</label>
+          <textarea 
+            id="observations" 
+            rows="3" 
+            placeholder="Observações sobre o documento (opcional)"
+          ></textarea>
+        </div>
+        
+        <div id="uploadProgress" style="display: none;">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="progress-text" id="progressText">Enviando...</p>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" id="uploadBtn">
+            Enviar Documento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/documents.js"></script>
+</body>
+</html>

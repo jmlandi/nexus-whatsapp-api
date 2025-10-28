@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus - Simulador de Chat</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🔷 Nexus</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customers.html" class="nav-item">
+          <span class="icon">👥</span>
+          <span>Clientes</span>
+        </a>
+        <a href="/documents.html" class="nav-item">
+          <span class="icon">📄</span>
+          <span>Documentos</span>
+        </a>
+        <a href="/simulator.html" class="nav-item active">
+          <span class="icon">💬</span>
+          <span>Simulador</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo">
+          <span class="user-avatar">👤</span>
+          <div class="user-details">
+            <span class="user-name">Carregando...</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+          <span>🚪</span> Sair
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content simulator-page">
+      <header class="content-header">
+        <div>
+          <h1>Simulador de Chat</h1>
+          <p class="subtitle">Teste a IA personificando um cliente</p>
+        </div>
+      </header>
+      
+      <div class="simulator-container">
+        <!-- Seletor de Cliente -->
+        <div class="simulator-selector">
+          <div class="selector-card">
+            <label for="customerSelect">Selecione um cliente para simular:</label>
+            <select id="customerSelect" class="customer-select">
+              <option value="">Escolha um cliente...</option>
+            </select>
+            
+            <div id="customerInfo" class="customer-info" style="display: none;">
+              <h3 id="customerName">-</h3>
+              <p id="customerPhone">-</p>
+              <div class="info-pills">
+                <span class="pill" id="documentsCount">0 documentos</span>
+                <span class="pill" id="chatsCount">0 conversas</span>
+              </div>
+            </div>
+            
+            <button 
+              id="startChatBtn" 
+              class="btn btn-primary btn-block" 
+              style="display: none;"
+              onclick="startSimulation()"
+            >
+              Iniciar Simulação
+            </button>
+          </div>
+        </div>
+        
+        <!-- Área de Chat -->
+        <div class="chat-simulator" id="chatSimulator" style="display: none;">
+          <div class="chat-header">
+            <div class="chat-customer-info">
+              <span class="customer-avatar">👤</span>
+              <div>
+                <h3 id="chatCustomerName">-</h3>
+                <span class="status-indicator">● Online</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="endSimulation()">
+              Encerrar Simulação
+            </button>
+          </div>
+          
+          <div class="chat-messages" id="chatMessages">
+            <div class="system-message">
+              <p>💬 Simulação iniciada. Digite sua mensagem como se fosse o cliente.</p>
+            </div>
+          </div>
+          
+          <div class="chat-input-container">
+            <form id="messageForm" class="chat-input-form">
+              <input 
+                type="text" 
+                id="messageInput" 
+                placeholder="Digite sua mensagem..."
+                autocomplete="off"
+              >
+              <button type="submit" class="btn-send" id="sendBtn">
+                Enviar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/simulator.js"></script>
+</body>
+</html>
