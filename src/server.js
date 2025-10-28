@@ -31,10 +31,10 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
       scriptSrcAttr: ["'none'"], // Bloqueia event handlers inline (onclick, onsubmit, etc)
-      styleSrc: ["'self'", "'unsafe-inline'"], // CSS inline ainda permitido
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // CSS inline e Google Fonts
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"], // Google Fonts
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
