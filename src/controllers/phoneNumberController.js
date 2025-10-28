@@ -45,7 +45,7 @@ class PhoneNumberController {
       ]);
 
       res.json({
-        data: phoneNumbers,
+        phoneNumbers,
         pagination: {
           page,
           limit: pageSize,
@@ -61,11 +61,11 @@ class PhoneNumberController {
 
   /**
    * Busca número específico por ID
-   * GET /api/phone_number?id=phone_number_id
+   * GET /api/phone_number/:id
    */
   async getById(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
 
       if (!id) {
         return res.status(400).json({ error: 'ID do número é obrigatório' });
@@ -96,14 +96,28 @@ class PhoneNumberController {
   /**
    * Cria novos números de telefone
    * POST /api/phone_number
-   * Body: { phoneNumbers: [{ customerId, phoneNumber }] }
+   * Body: { customerId, phoneNumber }
+   * ou { phoneNumbers: [{ customerId, phoneNumber }] }
    */
   async create(req, res) {
     try {
-      const { phoneNumbers } = req.body;
+      let phoneNumbers;
+      
+      // Aceita tanto um único número quanto uma lista
+      if (req.body.phoneNumbers && Array.isArray(req.body.phoneNumbers)) {
+        phoneNumbers = req.body.phoneNumbers;
+      } else if (req.body.customerId && req.body.phoneNumber) {
+        // Recebeu um único número, coloca em array
+        phoneNumbers = [req.body];
+      } else {
+        return res.status(400).json({ 
+          error: 'Dados inválidos',
+          message: 'Envie um número com customerId e phoneNumber, ou uma lista de números'
+        });
+      }
 
-      if (!phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
-        return res.status(400).json({ error: 'Lista de números é obrigatória' });
+      if (phoneNumbers.length === 0) {
+        return res.status(400).json({ error: 'Lista de números não pode estar vazia' });
       }
 
       const createdNumbers = [];
@@ -156,24 +170,35 @@ class PhoneNumberController {
         }
       }
 
+      // Se criou apenas um, retorna objeto único
+      if (createdNumbers.length === 1 && errors.length === 0) {
+        return res.status(201).json({
+          message: 'Número criado com sucesso',
+          phoneNumber: createdNumbers[0]
+        });
+      }
+
       res.status(201).json({
         message: `${createdNumbers.length} número(s) criado(s)`,
-        data: createdNumbers,
+        phoneNumbers: createdNumbers,
         errors: errors.length > 0 ? errors : undefined
       });
     } catch (error) {
       logger.error(`Erro ao criar números: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao criar números' });
+      res.status(500).json({ 
+        error: 'Erro ao criar números',
+        message: error.message 
+      });
     }
   }
 
   /**
    * Atualiza número específico
-   * PUT /api/phone_number?id=phone_number_id
+   * PUT /api/phone_number/:id
    */
   async update(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
       const { phoneNumber, isActive } = req.body;
 
       if (!id) {
@@ -199,7 +224,10 @@ class PhoneNumberController {
       });
 
       logger.info(`Número atualizado: ${id}`);
-      res.json(updated);
+      res.json({
+        message: 'Número atualizado com sucesso',
+        phoneNumber: updated
+      });
     } catch (error) {
       if (error.code === 'P2025') {
         return res.status(404).json({ error: 'Número não encontrado' });
@@ -211,11 +239,11 @@ class PhoneNumberController {
 
   /**
    * Remove número (soft delete)
-   * DELETE /api/phone_number?id=phone_number_id
+   * DELETE /api/phone_number/:id
    */
   async delete(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
 
       if (!id) {
         return res.status(400).json({ error: 'ID do número é obrigatório' });

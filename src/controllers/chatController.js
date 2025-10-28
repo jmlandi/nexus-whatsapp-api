@@ -172,7 +172,7 @@ class ChatController {
       ]);
 
       res.json({
-        data: chats,
+        chats,
         pagination: {
           page,
           limit: pageSize,

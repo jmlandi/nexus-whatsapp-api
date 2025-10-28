@@ -11,34 +11,67 @@ class WebChatController {
   /**
    * Cria uma nova sessão de chat web
    * POST /api/webchat/session
-   * Body: { name, email? }
+   * Body: { name, email? } OU { customerId }
    */
   async createSession(req, res) {
     try {
-      const { name, email } = req.body;
+      const { name, email, customerId } = req.body;
 
-      if (!name) {
-        return res.status(400).json({ error: 'Nome é obrigatório' });
+      let customer;
+      let phoneNumber;
+
+      // Se forneceu customerId, usa cliente existente
+      if (customerId) {
+        customer = await prisma.customer.findUnique({
+          where: { id: customerId },
+          include: {
+            phoneNumbers: {
+              where: { isActive: true },
+              take: 1
+            }
+          }
+        });
+
+        if (!customer) {
+          return res.status(404).json({ error: 'Cliente não encontrado' });
+        }
+
+        // Usa o primeiro número ativo ou cria um fictício
+        if (customer.phoneNumbers.length > 0) {
+          phoneNumber = customer.phoneNumbers[0];
+        } else {
+          phoneNumber = await prisma.phoneNumber.create({
+            data: {
+              customerId: customer.id,
+              phoneNumber: `sim_${Date.now()}`,
+              isActive: true
+            }
+          });
+        }
+      } else {
+        // Cria cliente temporário para usuário web anônimo
+        if (!name) {
+          return res.status(400).json({ error: 'Nome ou customerId é obrigatório' });
+        }
+
+        customer = await prisma.customer.create({
+          data: {
+            firstName: name,
+            lastName: 'Web User',
+            nickname: name,
+            isActive: true
+          }
+        });
+
+        // Cria um número fictício para o chat web
+        phoneNumber = await prisma.phoneNumber.create({
+          data: {
+            customerId: customer.id,
+            phoneNumber: `web_${Date.now()}`,
+            isActive: true
+          }
+        });
       }
-
-      // Cria um cliente temporário para web
-      const customer = await prisma.customer.create({
-        data: {
-          firstName: name,
-          lastName: 'Web User',
-          nickname: name,
-          isActive: true
-        }
-      });
-
-      // Cria um número fictício para o chat web
-      const phoneNumber = await prisma.phoneNumber.create({
-        data: {
-          customerId: customer.id,
-          phoneNumber: `web_${Date.now()}`,
-          isActive: true
-        }
-      });
 
       // Cria o chat
       const chat = await prisma.chat.create({
@@ -50,7 +83,8 @@ class WebChatController {
       });
 
       // Mensagem de boas-vindas
-      const welcomeMessage = `Olá ${name}! 👋 Sou o Nexus, assistente de IA da WN7 Marketing.\n\nComo posso ajudar você hoje?`;
+      const customerName = customer.nickname || customer.firstName;
+      const welcomeMessage = `Olá ${customerName}! 👋 Sou o Nexus, assistente de IA da WN7 Marketing.\n\nComo posso ajudar você hoje?`;
       
       await prisma.chatMessage.create({
         data: {
@@ -60,7 +94,7 @@ class WebChatController {
         }
       });
 
-      logger.info(`Sessão de web chat criada: ${chat.id} para ${name}`);
+      logger.info(`Sessão de web chat criada: ${chat.id} para ${customerName}`);
 
       res.status(201).json({
         sessionId: chat.id,

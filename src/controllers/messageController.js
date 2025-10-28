@@ -38,7 +38,7 @@ class MessageController {
       ]);
 
       res.json({
-        data: messages,
+        messages,
         pagination: {
           page,
           limit: pageSize,

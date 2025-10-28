@@ -60,7 +60,7 @@ function renderCustomers() {
               </span>
             </td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="editCustomer('${customer.id}')">
+              <button class="btn btn-secondary btn-sm edit-customer-btn" data-customer-id="${customer.id}">
                 ✏️ Editar
               </button>
             </td>
@@ -71,6 +71,14 @@ function renderCustomers() {
   `;
   
   container.innerHTML = table;
+  
+  // Adiciona event listeners aos botões de editar
+  document.querySelectorAll('.edit-customer-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const customerId = e.target.closest('button').dataset.customerId;
+      editCustomer(customerId);
+    });
+  });
 }
 
 /**
@@ -269,6 +277,34 @@ if (searchInput) {
 
 // Carrega clientes ao iniciar
 loadCustomers();
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+  
+  const newCustomerBtn = document.getElementById('newCustomerBtn');
+  if (newCustomerBtn) {
+    newCustomerBtn.addEventListener('click', openCustomerModal);
+  }
+  
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeCustomerModal);
+  }
+  
+  const cancelBtn = document.getElementById('cancelBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeCustomerModal);
+  }
+  
+  const addPhoneBtn = document.getElementById('addPhoneBtn');
+  if (addPhoneBtn) {
+    addPhoneBtn.addEventListener('click', addPhoneField);
+  }
+});
 
 // Verifica se deve abrir modal automaticamente
 const urlParams = new URLSearchParams(window.location.search);

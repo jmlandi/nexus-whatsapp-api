@@ -40,7 +40,7 @@
             <span class="user-name">Carregando...</span>
           </div>
         </div>
-        <button class="btn-logout" onclick="logout()">
+        <button class="btn-logout" id="logoutBtn">
           <span>🚪</span> Sair
         </button>
       </div>
@@ -53,7 +53,7 @@
           <h1>Documentos</h1>
           <p class="subtitle">PDFs e relatórios dos clientes</p>
         </div>
-        <button class="btn btn-primary" onclick="openUploadModal()">
+        <button class="btn btn-primary" id="uploadDocBtn">
           ⬆️ Upload de Documento
         </button>
       </header>
@@ -82,7 +82,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>Upload de Documento</h2>
-        <button class="btn-close" onclick="closeUploadModal()">✕</button>
+        <button class="btn-close" id="closeUploadModalBtn">✕</button>
       </div>
       
       <form id="uploadForm" class="modal-body">
@@ -129,7 +129,7 @@
         </div>
         
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">
+          <button type="button" class="btn btn-secondary" id="cancelUploadBtn">
             Cancelar
           </button>
           <button type="submit" class="btn btn-primary" id="uploadBtn">

@@ -6,6 +6,7 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
+const pdfService = require('./pdfService');
 
 class AIService {
   constructor() {
@@ -30,7 +31,7 @@ class AIService {
           reports: {
             where: { isActive: true },
             orderBy: { reportTimestamp: 'desc' },
-            take: 5 // Últimos 5 relatórios
+            take: 2 // Últimos 2 relatórios (para não sobrecarregar)
           }
         }
       });
@@ -48,15 +49,42 @@ class AIService {
       context += `\n\n`;
 
       if (customer.reports.length > 0) {
-        context += `Relatórios de Marketing:\n`;
-        customer.reports.forEach((report, index) => {
+        context += `=== RELATÓRIOS DE MARKETING ===\n\n`;
+        
+        // Processa PDFs e extrai conteúdo
+        for (let i = 0; i < customer.reports.length; i++) {
+          const report = customer.reports[i];
           const date = new Date(report.reportTimestamp).toLocaleDateString('pt-BR');
-          context += `${index + 1}. Relatório de ${date}`;
+          
+          context += `📊 RELATÓRIO ${i + 1} - ${date}\n`;
+          
           if (report.observations) {
-            context += ` - ${report.observations}`;
+            context += `Observações: ${report.observations}\n`;
           }
-          context += `\n`;
-        });
+          
+          // Tenta extrair conteúdo do PDF
+          try {
+            logger.info(`Extraindo conteúdo do relatório: ${report.id}`);
+            const pdfText = await pdfService.processPDF(report.reportUrl);
+            
+            // Limita a 6000 caracteres por relatório
+            const limitedText = pdfText.length > 6000 
+              ? pdfText.substring(0, 6000) + '\n[... restante do relatório omitido por tamanho ...]'
+              : pdfText;
+            
+            context += `\nConteúdo do Relatório:\n${limitedText}\n`;
+            context += `\n${'='.repeat(60)}\n\n`;
+            
+          } catch (pdfError) {
+            logger.error(`Erro ao processar PDF ${report.id}: ${pdfError.message}`);
+            context += `\n⚠️ Não foi possível extrair o conteúdo deste PDF.\n`;
+            context += `\n${'='.repeat(60)}\n\n`;
+          }
+        }
+        
+        context += `\n✅ Você tem acesso ao CONTEÚDO COMPLETO dos relatórios acima.\n`;
+        context += `Analise os dados, métricas e informações para responder perguntas específicas do cliente.\n`;
+        
       } else {
         context += `Nenhum relatório disponível ainda.\n`;
       }
@@ -109,23 +137,31 @@ class AIService {
       const chatHistory = await this.getChatHistory(chatId, 8);
 
       // Monta o system prompt
-      const systemPrompt = `Você é o Nexus, um assistente de IA especializado em marketing digital da agência WN7.
+      const systemPrompt = `Você é o Nexus, um assistente de IA especializado em marketing digital da agência WN7 Marketing.
 
 Seu papel é ajudar clientes a entender seus relatórios de marketing, responder perguntas sobre campanhas, métricas e resultados.
 
 Contexto do Cliente:
 ${customerContext}
 
-Diretrizes:
+Diretrizes Importantes:
+- Você TEM ACESSO COMPLETO ao conteúdo dos relatórios de marketing do cliente
+- Analise os dados, métricas, gráficos e informações presentes nos relatórios
+- Responda perguntas específicas com base nos números e dados reais dos relatórios
+- Seja preciso e cite os valores exatos quando relevante
+- Se o cliente perguntar sobre algo que não está nos relatórios fornecidos, seja honesto sobre isso
+- Compare períodos diferentes se houver múltiplos relatórios disponíveis
+- Identifique tendências, pontos fortes e áreas de melhoria
 - Seja amigável, profissional e prestativo
 - Use linguagem clara e acessível
-- Baseie suas respostas nos relatórios disponíveis
-- Se não souber algo específico, seja honesto e ofereça ajuda para entrar em contato com a equipe
-- Mantenha respostas concisas (máximo 2-3 parágrafos)
-- Use emojis ocasionalmente para tornar a conversa mais amigável
-- Se o cliente pedir informações muito específicas que não estão nos relatórios, sugira que ele fale com seu gerente de conta
+- Mantenha respostas concisas (2-4 parágrafos) mas completas
+- Use emojis ocasionalmente para tornar a conversa mais amigável (📊 📈 💰 ✅ etc)
+- Se identificar insights importantes, destaque-os de forma clara
 
-Lembre-se: você está conversando via WhatsApp, então mantenha as mensagens relativamente curtas e diretas.`;
+Exemplo de boa resposta:
+"Analisando seu relatório de setembro, vejo que você teve 15.234 impressões no Google Ads com um CTR de 3.2%. 📊 Isso representa um aumento de 18% em relação ao mês anterior! O CPC médio foi de R$ 1,45..."
+
+Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, mas sempre baseado nos dados reais.`;
 
       // Adiciona a mensagem atual ao histórico
       const messages = [

@@ -6,8 +6,10 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const logger = require('./utils/logger');
 const routes = require('./routes');
@@ -16,9 +18,50 @@ const { startCronJobs } = require('./jobs/cronJobs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares de segurança
-app.use(helmet());
+// Middleware para gerar nonce único por requisição (CSP segura)
+app.use((req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+// Middlewares de segurança com CSP rigorosa
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
+      scriptSrcAttr: ["'none'"], // Bloqueia event handlers inline (onclick, onsubmit, etc)
+      styleSrc: ["'self'", "'unsafe-inline'"], // CSS inline ainda permitido
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+}));
 app.use(cors());
+
+// Middleware para injetar nonce em arquivos HTML
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    const filePath = path.join(__dirname, '../public', req.path);
+    
+    if (fs.existsSync(filePath)) {
+      let html = fs.readFileSync(filePath, 'utf-8');
+      // Injeta o nonce em todos os scripts inline
+      html = html.replace(/<script(?!.*src=)/g, `<script nonce="${res.locals.nonce}"`);
+      
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  }
+  next();
+});
 
 // Servir arquivos estáticos (interface web)
 app.use(express.static(path.join(__dirname, '../public')));

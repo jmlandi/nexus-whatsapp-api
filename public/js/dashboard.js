@@ -90,3 +90,11 @@ async function loadRecentCustomers() {
 // Carrega dados ao iniciar
 loadStats();
 loadRecentCustomers();
+
+// Event listener para botão de logout
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+});

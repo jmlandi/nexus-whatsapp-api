@@ -180,7 +180,10 @@ document.getElementById('messageForm')?.addEventListener('submit', async (e) => 
     });
     
     // Adiciona resposta da IA
-    if (data.response) {
+    if (data.reply) {
+      addMessageToUI(data.reply, 'agent');
+    } else if (data.response) {
+      // Fallback para compatibilidade
       addMessageToUI(data.response, 'agent');
     }
   } catch (error) {
@@ -205,3 +208,21 @@ document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
 
 // Carrega clientes ao iniciar
 loadCustomersForSimulator();
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+  
+  const startChatBtn = document.getElementById('startChatBtn');
+  if (startChatBtn) {
+    startChatBtn.addEventListener('click', startSimulation);
+  }
+  
+  const endSimulationBtn = document.getElementById('endSimulationBtn');
+  if (endSimulationBtn) {
+    endSimulationBtn.addEventListener('click', endSimulation);
+  }
+});

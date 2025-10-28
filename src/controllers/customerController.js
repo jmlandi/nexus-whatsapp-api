@@ -44,7 +44,7 @@ class CustomerController {
       ]);
 
       res.json({
-        data: customers,
+        customers,
         pagination: {
           page,
           limit: pageSize,
@@ -60,11 +60,11 @@ class CustomerController {
 
   /**
    * Busca cliente específico por ID
-   * GET /api/customer?id=customer_id
+   * GET /api/customer/:id
    */
   async getById(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
 
       if (!id) {
         return res.status(400).json({ error: 'ID do cliente é obrigatório' });
@@ -108,14 +108,28 @@ class CustomerController {
   /**
    * Cria novos clientes
    * POST /api/customer
-   * Body: { customers: [{ firstName, lastName, nickname?, phoneNumbers: [string] }] }
+   * Body: { firstName, lastName, nickname?, phoneNumbers: [string] }
+   * ou { customers: [{ firstName, lastName, nickname?, phoneNumbers: [string] }] }
    */
   async create(req, res) {
     try {
-      const { customers } = req.body;
+      let customers;
+      
+      // Aceita tanto um único cliente quanto uma lista
+      if (req.body.customers && Array.isArray(req.body.customers)) {
+        customers = req.body.customers;
+      } else if (req.body.firstName && req.body.lastName) {
+        // Recebeu um único cliente, coloca em array
+        customers = [req.body];
+      } else {
+        return res.status(400).json({ 
+          error: 'Dados inválidos',
+          message: 'Envie um cliente com firstName e lastName, ou uma lista de clientes'
+        });
+      }
 
-      if (!customers || !Array.isArray(customers) || customers.length === 0) {
-        return res.status(400).json({ error: 'Lista de clientes é obrigatória' });
+      if (customers.length === 0) {
+        return res.status(400).json({ error: 'Lista de clientes não pode estar vazia' });
       }
 
       const createdCustomers = [];
@@ -147,23 +161,34 @@ class CustomerController {
         logger.info(`Cliente criado: ${customer.id}`);
       }
 
-      res.status(201).json({
-        message: `${createdCustomers.length} cliente(s) criado(s)`,
-        data: createdCustomers
-      });
+      // Se criou apenas um, retorna objeto único, senão retorna array
+      if (createdCustomers.length === 1) {
+        res.status(201).json({
+          message: 'Cliente criado com sucesso',
+          customer: createdCustomers[0]
+        });
+      } else {
+        res.status(201).json({
+          message: `${createdCustomers.length} cliente(s) criado(s)`,
+          customers: createdCustomers
+        });
+      }
     } catch (error) {
       logger.error(`Erro ao criar clientes: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao criar clientes' });
+      res.status(500).json({ 
+        error: 'Erro ao criar clientes',
+        message: error.message 
+      });
     }
   }
 
   /**
    * Atualiza cliente específico
-   * PUT /api/customer?id=customer_id
+   * PUT /api/customer/:id
    */
   async update(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
       const { firstName, lastName, nickname, isActive } = req.body;
 
       if (!id) {
@@ -186,7 +211,10 @@ class CustomerController {
       });
 
       logger.info(`Cliente atualizado: ${id}`);
-      res.json(customer);
+      res.json({
+        message: 'Cliente atualizado com sucesso',
+        customer
+      });
     } catch (error) {
       if (error.code === 'P2025') {
         return res.status(404).json({ error: 'Cliente não encontrado' });
@@ -198,11 +226,11 @@ class CustomerController {
 
   /**
    * Remove cliente (soft delete)
-   * DELETE /api/customer?id=customer_id
+   * DELETE /api/customer/:id
    */
   async delete(req, res) {
     try {
-      const { id } = req.query;
+      const { id } = req.params;
 
       if (!id) {
         return res.status(400).json({ error: 'ID do cliente é obrigatório' });

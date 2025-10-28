@@ -40,7 +40,7 @@
             <span class="user-name">Carregando...</span>
           </div>
         </div>
-        <button class="btn-logout" onclick="logout()">
+        <button class="btn-logout" id="logoutBtn">
           <span>🚪</span> Sair
         </button>
       </div>
@@ -53,7 +53,7 @@
           <h1>Clientes</h1>
           <p class="subtitle">Gerencie seus clientes e telefones</p>
         </div>
-        <button class="btn btn-primary" onclick="openCustomerModal()">
+        <button class="btn btn-primary" id="newCustomerBtn">
           ➕ Novo Cliente
         </button>
       </header>
@@ -78,7 +78,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">Novo Cliente</h2>
-        <button class="btn-close" onclick="closeCustomerModal()">✕</button>
+        <button class="btn-close" id="closeModalBtn">✕</button>
       </div>
       
       <form id="customerForm" class="modal-body">
@@ -104,13 +104,13 @@
         <div class="form-section">
           <h3>Telefones</h3>
           <div id="phonesContainer"></div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="addPhoneField()">
+          <button type="button" class="btn btn-secondary btn-sm" id="addPhoneBtn">
             ➕ Adicionar Telefone
           </button>
         </div>
         
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">
             Cancelar
           </button>
           <button type="submit" class="btn btn-primary" id="saveCustomerBtn">

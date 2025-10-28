@@ -40,7 +40,7 @@
             <span class="user-name">Carregando...</span>
           </div>
         </div>
-        <button class="btn-logout" onclick="logout()">
+        <button class="btn-logout" id="logoutBtn">
           <span>🚪</span> Sair
         </button>
       </div>
@@ -77,7 +77,6 @@
               id="startChatBtn" 
               class="btn btn-primary btn-block" 
               style="display: none;"
-              onclick="startSimulation()"
             >
               Iniciar Simulação
             </button>
@@ -94,7 +93,7 @@
                 <span class="status-indicator">● Online</span>
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="endSimulation()">
+            <button class="btn btn-secondary btn-sm" id="endSimulationBtn">
               Encerrar Simulação
             </button>
           </div>

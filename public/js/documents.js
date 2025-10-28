@@ -90,10 +90,10 @@ function renderDocuments() {
             <td>${doc.observations || '<em>Sem observações</em>'}</td>
             <td>${formatDate(doc.createdAt)}</td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="window.open('${doc.reportUrl}', '_blank')">
+              <button class="btn btn-secondary btn-sm view-doc-btn" data-url="${doc.reportUrl}">
                 👁️ Ver
               </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteDocument('${doc.id}')">
+              <button class="btn btn-danger btn-sm delete-doc-btn" data-doc-id="${doc.id}">
                 🗑️
               </button>
             </td>
@@ -104,6 +104,21 @@ function renderDocuments() {
   `;
   
   container.innerHTML = table;
+  
+  // Adiciona event listeners aos botões
+  document.querySelectorAll('.view-doc-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const url = e.target.closest('button').dataset.url;
+      window.open(url, '_blank');
+    });
+  });
+  
+  document.querySelectorAll('.delete-doc-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const docId = e.target.closest('button').dataset.docId;
+      deleteDocument(docId);
+    });
+  });
 }
 
 /**
@@ -278,6 +293,29 @@ if (searchInput) {
 // Carrega dados ao iniciar
 loadCustomersForSelect();
 loadDocuments();
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+  
+  const uploadDocBtn = document.getElementById('uploadDocBtn');
+  if (uploadDocBtn) {
+    uploadDocBtn.addEventListener('click', openUploadModal);
+  }
+  
+  const closeUploadModalBtn = document.getElementById('closeUploadModalBtn');
+  if (closeUploadModalBtn) {
+    closeUploadModalBtn.addEventListener('click', closeUploadModal);
+  }
+  
+  const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+  if (cancelUploadBtn) {
+    cancelUploadBtn.addEventListener('click', closeUploadModal);
+  }
+});
 
 // Verifica se deve abrir modal automaticamente
 const urlParams = new URLSearchParams(window.location.search);

@@ -49,7 +49,7 @@ class ReportController {
       ]);
 
       res.json({
-        data: reports,
+        reports,
         pagination: {
           page,
           limit: pageSize,
