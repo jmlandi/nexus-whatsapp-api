@@ -5,6 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const customerController = require('../controllers/customerController');
+const { authenticate } = require('../middleware/auth');
+
+// Todas as rotas de customer requerem autenticação
+router.use(authenticate);
 
 // GET /api/customer - Lista todos os clientes
 router.get('/', customerController.getAll);

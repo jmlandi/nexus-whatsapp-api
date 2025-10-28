@@ -5,6 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const templateController = require('../controllers/templateController');
+const { authenticate } = require('../middleware/auth');
+
+// Todas as rotas de template requerem autenticação
+router.use(authenticate);
 
 // GET /api/template?limit=100 - Lista todos os templates
 router.get('/', templateController.getAll);

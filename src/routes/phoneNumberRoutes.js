@@ -1,12 +1,16 @@
 /**
- * Rotas de PhoneNumbers
+ * Rotas de Phone Numbers
  */
 
 const express = require('express');
 const router = express.Router();
 const phoneNumberController = require('../controllers/phoneNumberController');
+const { authenticate } = require('../middleware/auth');
 
-// GET /api/phone_number - Lista todos os números
+// Todas as rotas de phone number requerem autenticação
+router.use(authenticate);
+
+// GET /api/phone_number - Lista todos os telefones
 router.get('/', phoneNumberController.getAll);
 
 // GET /api/phone_number/:id - Busca número específico

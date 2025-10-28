@@ -5,6 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const reportController = require('../controllers/reportController');
+const { authenticate } = require('../middleware/auth');
+
+// Todas as rotas de report requerem autenticação
+router.use(authenticate);
 
 // GET /api/report - Lista todos os relatórios
 // GET /api/report?id=report_id - Busca relatório específico
