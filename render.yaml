@@ -5,7 +5,8 @@
 databases:
   # PostgreSQL Database
   - name: nexus-postgres
-    plan: starter # Free tier available
+    databaseName: nexus_db
+    user: nexus_user
     region: ohio # Choose: oregon, ohio, frankfurt, singapore
 
 services:
