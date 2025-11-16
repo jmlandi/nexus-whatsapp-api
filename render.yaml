@@ -9,8 +9,6 @@ services:
     plan: starter # Free tier available
     region: ohio # Choose: oregon, ohio, frankfurt, singapore
     ipAllowList: [] # Allow all IPs (Render services)
-    databaseName: nexus_db
-    databaseUser: nexus_user
 
   # Node.js Web Service (API + Frontend)
   - type: web
