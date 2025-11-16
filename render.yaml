@@ -2,14 +2,13 @@
 # This file defines the infrastructure for deploying Nexus on Render
 # Learn more: https://render.com/docs/blueprint-spec
 
-services:
+databases:
   # PostgreSQL Database
-  - type: pserv
-    name: nexus-postgres
+  - name: nexus-postgres
     plan: starter # Free tier available
     region: ohio # Choose: oregon, ohio, frankfurt, singapore
 
-  # Node.js Web Service (API + Frontend)
+services:
   - type: web
     name: nexus-api
     runtime: node
