@@ -1,0 +1,53 @@
+# Files and directories to exclude from Render deployment
+# This reduces build size and deployment time
+
+# Dependencies
+node_modules/
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Docker files (not needed on Render)
+docker-compose.yml
+docker-compose.db.yml
+Dockerfile
+.dockerignore
+
+# Development scripts
+start-db.sh
+stop-db.sh
+setup.sh
+
+# Documentation (optional - remove if you want docs deployed)
+docs/
+*.md
+!README.md
+
+# Logs
+logs/
+*.log
+
+# Testing files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo

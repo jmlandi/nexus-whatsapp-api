@@ -29,9 +29,20 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
+      scriptSrc: [
+        "'self'", 
+        (req, res) => `'nonce-${res.locals.nonce}'`,
+        "'unsafe-eval'",  // Necessário para Vue em modo dev
+        "https://cdn.tailwindcss.com",
+        "https://unpkg.com"
+      ],
       scriptSrcAttr: ["'none'"], // Bloqueia event handlers inline (onclick, onsubmit, etc)
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // CSS inline e Google Fonts
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://fonts.googleapis.com",
+        "https://cdn.tailwindcss.com"
+      ], // CSS inline e Google Fonts
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"], // Google Fonts
@@ -109,13 +120,29 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Redireciona root para a interface de login
+// Redireciona root para o SPA
 app.get('/', (req, res) => {
-  res.redirect('/login.html');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Tratamento de rota não encontrada (Geral)
-app.use((req, res) => {
+// Serve o SPA para todas as rotas não-API (SPA routing)
+app.get('*', (req, res, next) => {
+  // Se for uma rota de API, passa para o próximo handler
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  // Se for um arquivo estático, deixa o express.static servir
+  if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
+  
+  // Serve o index.html para todas as outras rotas (SPA)
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Tratamento de rota não encontrada (API apenas)
+app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     error: 'Rota não encontrada',
     path: req.path

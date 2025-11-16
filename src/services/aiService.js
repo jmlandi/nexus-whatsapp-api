@@ -30,7 +30,7 @@ class AIService {
         include: {
           reports: {
             where: { isActive: true },
-            orderBy: { reportTimestamp: 'desc' },
+            orderBy: { startDate: 'desc' },
             take: 2 // Últimos 2 relatórios (para não sobrecarregar)
           }
         }
@@ -54,9 +54,10 @@ class AIService {
         // Processa PDFs e extrai conteúdo
         for (let i = 0; i < customer.reports.length; i++) {
           const report = customer.reports[i];
-          const date = new Date(report.reportTimestamp).toLocaleDateString('pt-BR');
+          const startDate = new Date(report.startDate).toLocaleDateString('pt-BR');
+          const endDate = new Date(report.endDate).toLocaleDateString('pt-BR');
           
-          context += `📊 RELATÓRIO ${i + 1} - ${date}\n`;
+          context += `📊 RELATÓRIO ${i + 1} - Período: ${startDate} a ${endDate}\n`;
           
           if (report.observations) {
             context += `Observações: ${report.observations}\n`;
@@ -188,6 +189,78 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
 
     } catch (error) {
       logger.error(`Erro ao gerar resposta com IA: ${error.message}`);
+      
+      // Resposta fallback em caso de erro
+      return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
+             'Por favor, tente novamente em alguns instantes ou entre em contato diretamente com seu gerente de conta na WN7.';
+    }
+  }
+
+  /**
+   * Gera resposta simulada (sem salvar no banco)
+   * Usado pelo simulador de chat
+   * @param {string} userMessage - Mensagem do usuário
+   * @param {string} customerId - ID do cliente
+   * @param {Array} history - Histórico de mensagens
+   * @returns {Promise<string>} Resposta gerada pela IA
+   */
+  async generateSimulatedResponse(userMessage, customerId, history = []) {
+    try {
+      // Busca contexto do cliente
+      const customerContext = await this.getCustomerContext(customerId);
+
+      // Monta o system prompt
+      const systemPrompt = `Você é o Nexus, um assistente de IA especializado em marketing digital da agência WN7 Marketing.
+
+Seu papel é ajudar clientes a entender seus relatórios de marketing, responder perguntas sobre campanhas, métricas e resultados.
+
+Contexto do Cliente:
+${customerContext}
+
+Diretrizes Importantes:
+- Você TEM ACESSO COMPLETO ao conteúdo dos relatórios de marketing do cliente
+- Analise os dados, métricas, gráficos e informações presentes nos relatórios
+- Responda perguntas específicas com base nos números e dados reais dos relatórios
+- Seja preciso e cite os valores exatos quando relevante
+- Se o cliente perguntar sobre algo que não está nos relatórios fornecidos, seja honesto sobre isso
+- Compare períodos diferentes se houver múltiplos relatórios disponíveis
+- Identifique tendências, pontos fortes e áreas de melhoria
+- Seja amigável, profissional e prestativo
+- Use linguagem clara e acessível
+- Mantenha respostas concisas (2-4 parágrafos) mas completas
+- Use emojis ocasionalmente para tornar a conversa mais amigável (📊 📈 💰 ✅ etc)
+- Se identificar insights importantes, destaque-os de forma clara
+
+Exemplo de boa resposta:
+"Analisando seu relatório de setembro, vejo que você teve 15.234 impressões no Google Ads com um CTR de 3.2%. 📊 Isso representa um aumento de 18% em relação ao mês anterior! O CPC médio foi de R$ 1,45..."
+
+Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, mas sempre baseado nos dados reais.`;
+
+      // Adiciona a mensagem atual ao histórico
+      const messages = [
+        ...history,
+        {
+          role: 'user',
+          content: userMessage
+        }
+      ];
+
+      // Chama a API do Claude
+      const response = await this.client.messages.create({
+        model: this.model,
+        max_tokens: this.maxTokens,
+        system: systemPrompt,
+        messages: messages
+      });
+
+      // Extrai o texto da resposta
+      const aiResponse = response.content[0].text;
+
+      logger.info(`Resposta simulada gerada para cliente ${customerId}`);
+      return aiResponse;
+
+    } catch (error) {
+      logger.error(`Erro ao gerar resposta simulada: ${error.message}`);
       
       // Resposta fallback em caso de erro
       return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +

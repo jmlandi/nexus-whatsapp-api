@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "build": "npx prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "create-admin": "node scripts/create-admin.js",
     "setup": "npm install && npx prisma generate && npx prisma migrate deploy && npm run create-admin"

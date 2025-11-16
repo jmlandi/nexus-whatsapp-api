@@ -15,18 +15,20 @@ const messageRoutes = require('./messageRoutes');
 const chatRoutes = require('./chatRoutes');
 const templateRoutes = require('./templateRoutes');
 const webChatRoutes = require('./webChatRoutes');
+const simulatorRoutes = require('./simulatorRoutes');
 
 // Rotas públicas
 router.use('/auth', authRoutes);
 
 // Registra rotas de cada recurso
-router.use('/customer', customerRoutes);
-router.use('/phone_number', phoneNumberRoutes);
-router.use('/report', reportRoutes);
-router.use('/document', documentRoutes);
-router.use('/message', messageRoutes);
-router.use('/chat', chatRoutes);
-router.use('/template', templateRoutes);
+router.use('/customers', customerRoutes);
+router.use('/phone-numbers', phoneNumberRoutes);
+router.use('/reports', reportRoutes);
+router.use('/documents', documentRoutes);
+router.use('/messages', messageRoutes);
+router.use('/chats', chatRoutes);
+router.use('/templates', templateRoutes);
 router.use('/webchat', webChatRoutes);
+router.use('/simulator', simulatorRoutes);
 
 module.exports = router;

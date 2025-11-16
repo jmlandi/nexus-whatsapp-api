@@ -34,7 +34,7 @@ const upload = multer({
  */
 const uploadDocument = async (req, res) => {
   try {
-    const { customerId, observations, reportTimestamp } = req.body;
+    const { customerId, observations, startDate, endDate } = req.body;
     const file = req.file;
 
     // Validação
@@ -49,6 +49,13 @@ const uploadDocument = async (req, res) => {
       return res.status(400).json({
         error: 'Arquivo não enviado',
         message: 'É necessário enviar um arquivo PDF'
+      });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: 'Datas não especificadas',
+        message: 'As datas de início e fim são obrigatórias'
       });
     }
 
@@ -86,7 +93,8 @@ const uploadDocument = async (req, res) => {
       data: {
         customerId,
         reportUrl,
-        reportTimestamp: reportTimestamp ? new Date(reportTimestamp) : new Date(),
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
         observations: observations || null
       },
       include: {
@@ -152,7 +160,7 @@ const getCustomerDocuments = async (req, res) => {
             }
           }
         },
-        orderBy: { reportTimestamp: 'desc' },
+        orderBy: { startDate: 'desc' },
         skip,
         take: pageSize
       }),
@@ -210,7 +218,7 @@ const getAllDocuments = async (req, res) => {
             }
           }
         },
-        orderBy: { reportTimestamp: 'desc' },
+        orderBy: { startDate: 'desc' },
         skip,
         take: pageSize
       }),

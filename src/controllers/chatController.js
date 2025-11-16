@@ -215,6 +215,64 @@ class ChatController {
       res.status(500).json({ error: 'Erro ao buscar chat' });
     }
   }
+
+  /**
+   * Envia mensagem de texto via WhatsApp e registra no chat
+   * POST /api/chat/send-message
+   * Body: { chatId, message }
+   */
+  async sendMessage(req, res) {
+    try {
+      const { chatId, message } = req.body;
+
+      if (!chatId || !message) {
+        return res.status(400).json({ 
+          error: 'chatId e message são obrigatórios' 
+        });
+      }
+
+      // Busca chat com informações do cliente e telefone
+      const chat = await prisma.chat.findUnique({
+        where: { id: chatId },
+        include: {
+          customer: true,
+          phoneNumber: true
+        }
+      });
+
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat não encontrado' });
+      }
+
+      if (!chat.isOpen) {
+        return res.status(400).json({ error: 'Chat está fechado' });
+      }
+
+      // Envia mensagem via WhatsApp
+      const whatsappResponse = await whatsappService.sendMessage(
+        chat.phoneNumber.phoneNumber,
+        message
+      );
+
+      // Registra mensagem no chat
+      const chatMessage = await chatService.addMessage(
+        chatId,
+        message,
+        'agent'
+      );
+
+      logger.info(`Mensagem enviada no chat ${chatId}`);
+
+      res.json({
+        message: 'Mensagem enviada com sucesso',
+        chatMessage,
+        whatsappResponse
+      });
+    } catch (error) {
+      logger.error(`Erro ao enviar mensagem: ${error.message}`);
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new ChatController();

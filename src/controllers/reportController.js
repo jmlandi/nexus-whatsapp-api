@@ -33,7 +33,7 @@ class ReportController {
           where,
           skip,
           take: pageSize,
-          orderBy: { reportTimestamp: 'desc' },
+          orderBy: { startDate: 'desc' },
           include: {
             customer: {
               select: {

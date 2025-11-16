@@ -29,9 +29,7 @@ class CustomerController {
           take: pageSize,
           orderBy: { createdAt: 'desc' },
           include: {
-            phoneNumbers: {
-              where: { isActive: true }
-            },
+            phoneNumbers: true,  // Retorna todos os telefones (ativos e inativos)
             _count: {
               select: {
                 reports: true,
@@ -78,7 +76,7 @@ class CustomerController {
           },
           reports: {
             where: { isActive: true },
-            orderBy: { reportTimestamp: 'desc' },
+            orderBy: { startDate: 'desc' },
             take: 10
           },
           chats: {
@@ -189,7 +187,7 @@ class CustomerController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { firstName, lastName, nickname, isActive } = req.body;
+      const { firstName, lastName, nickname, isActive, phoneNumbers } = req.body;
 
       if (!id) {
         return res.status(400).json({ error: 'ID do cliente é obrigatório' });
@@ -202,14 +200,42 @@ class CustomerController {
       if (nickname !== undefined) updateData.nickname = nickname;
       if (isActive !== undefined) updateData.isActive = isActive;
 
-      const customer = await prisma.customer.update({
+      // Atualiza dados básicos do cliente
+      await prisma.customer.update({
         where: { id },
-        data: updateData,
+        data: updateData
+      });
+
+      // Se phoneNumbers foi fornecido, atualiza os telefones
+      if (phoneNumbers !== undefined && Array.isArray(phoneNumbers) && phoneNumbers.length > 0) {
+        // Deleta telefones antigos do cliente
+        await prisma.phoneNumber.deleteMany({
+          where: { customerId: id }
+        });
+
+        // Cria os novos telefones
+        await prisma.phoneNumber.createMany({
+          data: phoneNumbers.map(phone => ({ 
+            customerId: id,
+            phoneNumber: phone,
+            isActive: true 
+          }))
+        });
+      }
+
+      // Busca cliente atualizado com telefones
+      const customer = await prisma.customer.findUnique({
+        where: { id },
         include: {
           phoneNumbers: true
         }
       });
 
+      logger.info(`Cliente atualizado: ${id}`);
+      res.json({
+        message: 'Cliente atualizado com sucesso',
+        customer
+      });
       logger.info(`Cliente atualizado: ${id}`);
       res.json({
         message: 'Cliente atualizado com sucesso',

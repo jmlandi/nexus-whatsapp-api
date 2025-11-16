@@ -46,19 +46,22 @@ model Customer {
 // Tabela de Relatórios
 // Armazena referências aos PDFs de relatórios de marketing no S3
 model Report {
-  id              String    @id @default(uuid())
-  customerId      String    @map("customer_id")
-  reportUrl       String    @map("report_url") @db.Text
-  reportTimestamp DateTime  @map("report_timestamp")
-  observations    String?   @db.Text
-  isActive        Boolean   @default(true) @map("is_active")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  customerId   String   @map("customer_id")
+  reportUrl    String   @map("report_url") @db.Text
+  startDate    DateTime @map("start_date")
+  endDate      DateTime @map("end_date")
+  observations String?  @db.Text
+  isActive     Boolean  @default(true) @map("is_active")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   // Relacionamentos
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
+  @@index([startDate])
+  @@index([endDate])
   @@map("reports")
 }
 

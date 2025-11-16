@@ -22,4 +22,7 @@ router.post('/close-chat', chatController.closeChat);
 // POST /api/chat/send-template - Envia template e inicia chat
 router.post('/send-template', chatController.sendTemplate);
 
+// POST /api/chat/send-message - Envia mensagem de texto via WhatsApp
+router.post('/send-message', chatController.sendMessage);
+
 module.exports = router;

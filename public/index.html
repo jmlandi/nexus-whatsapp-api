@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Nexus - Sistema de Gestão com IA">
+  <title>Nexus - Sistema de Gestão</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <!-- Vue Router -->
+  <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.js"></script>
+  
+  <style>
+    [v-cloak] { display: none; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="app" v-cloak></div>
+
+  <!-- Store (Estado Global) -->
+  <script src="/spa/store/store.js"></script>
+  
+  <!-- Utils -->
+  <script src="/spa/utils/api.js"></script>
+  <script src="/spa/utils/auth.js"></script>
+  
+  <!-- Components -->
+  <script src="/spa/components/AppSidebar.js"></script>
+  <script src="/spa/components/PageHeader.js"></script>
+  <script src="/spa/components/Modal.js"></script>
+  <script src="/spa/components/Loading.js"></script>
+  <script src="/spa/components/EmptyState.js"></script>
+  <script src="/spa/components/Toast.js"></script>
+  
+  <!-- Views -->
+  <script src="/spa/views/Login.js"></script>
+  <script src="/spa/views/Dashboard.js"></script>
+  <script src="/spa/views/Customers.js"></script>
+  <script src="/spa/views/Documents.js"></script>
+  <script src="/spa/views/Simulator.js"></script>
+  <script src="/spa/views/Chat.js"></script>
+  
+  <!-- Router -->
+  <script src="/spa/router/index.js"></script>
+  
+  <!-- Main App -->
+  <script src="/spa/app.js"></script>
+</body>
+</html>
