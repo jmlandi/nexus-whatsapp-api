@@ -104,11 +104,8 @@ class AIService {
 
           // Tenta extrair conteúdo do PDF
           try {
-            console.log('📄 Processing PDF for report:', report.id);
-            console.log('📍 PDF URL:', report.reportUrl);
             logger.info(`Extraindo conteúdo do relatório: ${report.id}`);
             const pdfText = await pdfService.processPDF(report.reportUrl);
-            console.log('✅ PDF processed successfully, text length:', pdfText.length);
 
             // Limita a 6000 caracteres por relatório
             const limitedText =
@@ -119,8 +116,6 @@ class AIService {
             context += `\nConteúdo do Relatório:\n${limitedText}\n`;
             context += `\n${'='.repeat(60)}\n\n`;
           } catch (pdfError) {
-            console.error('❌ PDF processing error:', pdfError.message);
-            console.error('PDF Error stack:', pdfError.stack);
             logger.error(`Erro ao processar PDF ${report.id}: ${pdfError.message}`);
             context += '\n⚠️ Não foi possível extrair o conteúdo deste PDF.\n';
             context += `\n${'='.repeat(60)}\n\n`;
@@ -299,23 +294,9 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
    * );
    */
   async generateSimulatedResponse(userMessage, customerId, history = []) {
-    console.log('=== AIService.generateSimulatedResponse START ===');
-    console.log('CustomerId:', customerId);
-    console.log('Message:', userMessage.substring(0, 100));
-    console.log('History length:', history.length);
-
-    logger.debug('generateSimulatedResponse called', {
-      customerId,
-      messageLength: userMessage.length,
-      historyLength: history.length
-    });
-
     try {
-      // Busca contexto do cliente
-      console.log('Fetching customer context...');
-      logger.debug('Fetching customer context...');
+      // Build context with customer info and marketing reports
       const customerContext = await this.getCustomerContext(customerId);
-      console.log('✅ Customer context fetched, length:', customerContext.length);
 
       // Monta o system prompt
       const systemPrompt = `Você é o Nexus, um assistente de IA especializado em marketing digital da agência WN7 Marketing.
@@ -354,9 +335,6 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       ];
 
       // Chama a API do Claude
-      console.log('Calling Anthropic API...');
-      console.log('Model:', this.model);
-      console.log('Max tokens:', this.maxTokens);
       logger.debug('Calling Anthropic API...', { model: this.model, maxTokens: this.maxTokens });
 
       const response = await this.client.messages.create({
@@ -369,20 +347,9 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       // Extrai o texto da resposta
       const aiResponse = response.content[0].text;
 
-      console.log('✅ Anthropic API response received');
-      console.log('Response length:', aiResponse.length);
-      console.log('=== AIService.generateSimulatedResponse END ===');
-
       logger.info(`Simulated response generated for customer ${customerId}`, { responseLength: aiResponse.length });
       return aiResponse;
     } catch (error) {
-      console.error('=== ERROR in generateSimulatedResponse ===');
-      console.error('Error type:', error.constructor.name);
-      console.error('Error message:', error.message);
-      console.error('Error status:', error.status);
-      console.error('Error stack:', error.stack);
-      console.error('==========================================');
-
       // Log detalhado para debugging em produção
       const errorDetails = {
         message: error.message,

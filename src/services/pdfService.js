@@ -20,10 +20,8 @@ const loadPDFJS = async () => {
   if (!pdfjsLib) {
     try {
       pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
-      console.log('✅ pdfjs-dist library loaded successfully');
       logger.info('pdfjs-dist library loaded successfully');
     } catch (error) {
-      console.error('❌ Failed to load pdfjs-dist:', error.message);
       logger.error('Failed to load pdfjs-dist library', { error: error.message });
       throw new Error('PDF processing library not available');
     }
@@ -116,7 +114,6 @@ const loadPDFJS = async () => {
       }
 
       logger.info('Starting PDF text extraction...');
-      console.log('📖 Loading PDF with pdfjs-dist...');
 
       // Lazy-load pdfjs-dist only when needed
       const pdfjsLib = await loadPDFJS();
@@ -129,7 +126,6 @@ const loadPDFJS = async () => {
       });
 
       const pdfDocument = await loadingTask.promise;
-      console.log('✅ PDF document loaded, pages:', pdfDocument.numPages);
 
       let fullText = '';
 
@@ -137,7 +133,7 @@ const loadPDFJS = async () => {
       for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
         const page = await pdfDocument.getPage(pageNum);
         const textContent = await page.getTextContent();
-        
+
         // Combine all text items from the page
         const pageText = textContent.items.map(item => item.str).join(' ');
         fullText += pageText + '\n\n';
@@ -147,11 +143,9 @@ const loadPDFJS = async () => {
         throw new Error('No text content extracted from PDF');
       }
 
-      console.log('✅ Text extracted successfully');
       logger.info(`Successfully extracted ${fullText.length} characters from PDF`);
       return fullText.trim();
     } catch (error) {
-      console.error('❌ PDF extraction error:', error.message);
       logger.error('Error extracting text from PDF', { error: error.message, stack: error.stack });
       throw error;
     }
@@ -175,20 +169,10 @@ const loadPDFJS = async () => {
    */
   async processPDF(s3Url) {
     try {
-      console.log('🔵 PDFService.processPDF START');
-      console.log('S3 URL:', s3Url);
-
       const pdfBuffer = await this.downloadPDFFromS3(s3Url);
-      console.log('✅ PDF downloaded, buffer size:', pdfBuffer.length);
-
       const text = await this.extractTextFromPDF(pdfBuffer);
-      console.log('✅ Text extracted, length:', text.length);
-      console.log('🔵 PDFService.processPDF END');
-
       return text;
     } catch (error) {
-      console.error('❌ PDFService.processPDF ERROR:', error.message);
-      console.error('Error stack:', error.stack);
       logger.error(`Erro ao processar PDF: ${error.message}`);
       throw error;
     }
