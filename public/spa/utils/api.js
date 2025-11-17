@@ -28,6 +28,11 @@ async function apiRequest(endpoint, options = {}) {
   };
 
   try {
+    console.log('🌐 API Request:', config.method || 'GET', endpoint);
+    if (options.body && !(options.body instanceof FormData)) {
+      console.log('📤 Request body:', JSON.stringify(JSON.parse(options.body), null, 2));
+    }
+    
     const response = await fetch(endpoint, config);
 
     // Check content type before parsing
@@ -41,8 +46,12 @@ async function apiRequest(endpoint, options = {}) {
 
       if (isHtml) {
         console.error(`Server returned HTML instead of JSON (${response.status} ${response.statusText})`);
+        console.error('HTML Response preview:', text.substring(0, 500));
+        console.error('Request URL:', endpoint);
+        console.error('Request method:', config.method || 'GET');
       } else {
         console.error('Non-JSON response:', text.substring(0, 200));
+        console.error('Request URL:', endpoint);
       }
 
       throw new Error(
