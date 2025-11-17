@@ -10,11 +10,20 @@ const pdfService = require('./pdfService');
 
 class AIService {
   constructor() {
+    // Validação da API Key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logger.error('ANTHROPIC_API_KEY não está configurada nas variáveis de ambiente!');
+    } else if (process.env.ANTHROPIC_API_KEY.includes('your_') || process.env.ANTHROPIC_API_KEY.length < 20) {
+      logger.error('ANTHROPIC_API_KEY parece ser um placeholder ou inválida!');
+    }
+    
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY
     });
     this.model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
     this.maxTokens = parseInt(process.env.ANTHROPIC_MAX_TOKENS) || 1024;
+    
+    logger.info(`AIService inicializado - Modelo: ${this.model}, MaxTokens: ${this.maxTokens}`);
   }
 
   /**
@@ -188,7 +197,22 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       return aiResponse;
 
     } catch (error) {
-      logger.error(`Erro ao gerar resposta com IA: ${error.message}`);
+      // Log detalhado para debugging em produção
+      logger.error('=== ERRO AO GERAR RESPOSTA COM IA ===');
+      logger.error(`Mensagem: ${error.message}`);
+      logger.error(`Tipo: ${error.constructor.name}`);
+      logger.error(`Status: ${error.status || 'N/A'}`);
+      
+      if (error.error) {
+        logger.error(`Detalhes do erro: ${JSON.stringify(error.error)}`);
+      }
+      
+      if (error.response) {
+        logger.error(`Response: ${JSON.stringify(error.response.data)}`);
+      }
+      
+      logger.error(`Stack: ${error.stack}`);
+      logger.error('======================================');
       
       // Resposta fallback em caso de erro
       return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
@@ -260,7 +284,22 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       return aiResponse;
 
     } catch (error) {
-      logger.error(`Erro ao gerar resposta simulada: ${error.message}`);
+      // Log detalhado para debugging em produção
+      logger.error('=== ERRO AO GERAR RESPOSTA SIMULADA ===');
+      logger.error(`Mensagem: ${error.message}`);
+      logger.error(`Tipo: ${error.constructor.name}`);
+      logger.error(`Status: ${error.status || 'N/A'}`);
+      
+      if (error.error) {
+        logger.error(`Detalhes do erro: ${JSON.stringify(error.error)}`);
+      }
+      
+      if (error.response) {
+        logger.error(`Response: ${JSON.stringify(error.response.data)}`);
+      }
+      
+      logger.error(`Stack: ${error.stack}`);
+      logger.error('========================================');
       
       // Resposta fallback em caso de erro
       return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +

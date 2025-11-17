@@ -271,16 +271,23 @@ const Chat = {
     async loadData() {
       this.loading = true;
       try {
-        // Carrega chats, clientes e templates em paralelo
-        const [chatsResponse, customersResponse, templatesResponse] = await Promise.all([
+        // Carrega chats e clientes em paralelo
+        const [chatsResponse, customersResponse] = await Promise.all([
           api.get('/api/chats?limit=100'),
-          api.get('/api/customers?limit=100'),
-          api.get('/api/templates')
+          api.get('/api/customers?limit=100')
         ]);
         
         this.chats = chatsResponse.chats || [];
         this.customers = customersResponse.customers || [];
-        this.templates = templatesResponse.templates || [];
+        
+        // Tenta carregar templates, mas não falha se der erro
+        try {
+          const templatesResponse = await api.get('/api/templates');
+          this.templates = templatesResponse.templates || [];
+        } catch (templateError) {
+          console.warn('Não foi possível carregar templates (WhatsApp não configurado):', templateError.message);
+          this.templates = [];
+        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         store.showToast('Erro ao carregar dados do chat', 'error');
