@@ -120,11 +120,42 @@ const uploadDocument = async (req, res) => {
       report
     });
   } catch (error) {
-    logger.error('Erro ao fazer upload do documento', { error: error.message });
-    res.status(500).json({
+    logger.error('Erro ao fazer upload do documento', { 
+      error: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
+    
+    // Retorna detalhes específicos baseado no tipo de erro
+    const errorResponse = {
       error: 'Erro no servidor',
       message: 'Ocorreu um erro ao fazer upload do documento'
-    });
+    };
+    
+    // Erros específicos do AWS S3
+    if (error.name === 'NoSuchBucket') {
+      errorResponse.message = 'Bucket S3 não encontrado';
+      errorResponse.details = `Bucket: ${process.env.AWS_S3_BUCKET_NAME}`;
+    } else if (error.name === 'InvalidAccessKeyId') {
+      errorResponse.message = 'Credenciais AWS inválidas';
+      errorResponse.details = 'Verifique AWS_ACCESS_KEY_ID';
+    } else if (error.name === 'SignatureDoesNotMatch') {
+      errorResponse.message = 'Credenciais AWS inválidas';
+      errorResponse.details = 'Verifique AWS_SECRET_ACCESS_KEY';
+    } else if (error.code === 'NetworkingError') {
+      errorResponse.message = 'Erro de conexão com AWS S3';
+      errorResponse.details = `Região: ${process.env.AWS_REGION}`;
+    } else if (error.message) {
+      errorResponse.details = error.message;
+    }
+    
+    // Em desenvolvimento, retorna o stack trace
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.stack = error.stack;
+    }
+    
+    res.status(500).json(errorResponse);
   }
 };
 

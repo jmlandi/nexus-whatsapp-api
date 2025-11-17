@@ -186,7 +186,33 @@ const Documents = {
         await this.loadDocuments();
       } catch (error) {
         console.error('Upload error:', error);
-        store.showToast(error.response?.data?.message || 'Erro ao enviar documento', 'error');
+        console.error('Error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          stack: error.stack
+        });
+        
+        // Monta mensagem de erro detalhada
+        let errorMessage = 'Erro ao enviar documento';
+        if (error.response?.data) {
+          if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          }
+          if (error.response.data.error) {
+            errorMessage += ` (${error.response.data.error})`;
+          }
+          // Mostra detalhes técnicos em desenvolvimento
+          if (error.response.data.details) {
+            console.error('Server error details:', error.response.data.details);
+            errorMessage += ` - Ver console para detalhes`;
+          }
+        } else if (error.message) {
+          errorMessage += `: ${error.message}`;
+        }
+        
+        store.showToast(errorMessage, 'error');
       } finally {
         this.uploading = false;
       }
