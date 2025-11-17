@@ -4,12 +4,23 @@ const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
 
 // Configuração do S3
+const awsRegion = process.env.AWS_REGION || 'us-east-2';
+logger.info('Configurando S3 Client', { 
+  region: awsRegion,
+  bucket: process.env.AWS_S3_BUCKET_NAME,
+  hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+  hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY
+});
+
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: awsRegion,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
+  },
+  // Força o uso do endpoint regional correto
+  forcePathStyle: false,
+  useAccelerateEndpoint: false
 });
 
 // Configuração do Multer para armazenar em memória
@@ -83,10 +94,17 @@ const uploadDocument = async (req, res) => {
       ContentType: file.mimetype
     };
 
+    logger.info('Tentando upload para S3', {
+      bucket: uploadParams.Bucket,
+      key: uploadParams.Key,
+      size: file.buffer.length,
+      region: awsRegion
+    });
+
     await s3Client.send(new PutObjectCommand(uploadParams));
 
     // URL do arquivo no S3
-    const reportUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    const reportUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${awsRegion}.amazonaws.com/${fileName}`;
 
     // Salva o registro no banco
     const report = await prisma.report.create({
