@@ -25,8 +25,15 @@ function getCorsOptions() {
 
     return {
       origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, Postman, curl, etc)
+        // Allow requests with no origin (mobile apps, Postman, curl, same-origin, etc)
+        // Same-origin requests from browser often have no origin header
         if (!origin) return callback(null, true);
+
+        if (allowedOrigins.length === 0) {
+          // If no origins configured, allow all (fallback for initial setup)
+          console.log('⚠️  No CORS origins configured, allowing all origins');
+          return callback(null, true);
+        }
 
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
