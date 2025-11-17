@@ -20,18 +20,18 @@ const Customers = {
   template: `
     <div class="flex h-screen">
       <app-sidebar current-page="customers"></app-sidebar>
-      
+
       <main class="flex-1 flex flex-col overflow-hidden">
-        <page-header 
-          title="Clientes" 
+        <page-header
+          title="Clientes"
           subtitle="Gerencie seus clientes e telefones de contato"
           action-label="Novo Cliente"
           @action="openModal">
         </page-header>
-        
+
         <div class="flex-1 overflow-y-auto p-8">
           <loading v-if="loading"></loading>
-          
+
           <div v-else-if="customers.length > 0" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <table class="w-full">
               <thead class="bg-gray-50 border-b border-gray-200">
@@ -54,7 +54,7 @@ const Customers = {
                         <span :class="['phone-badge', !phone.isActive && 'opacity-50 line-through']">
                           {{ phone.phoneNumber }}
                         </span>
-                        <button 
+                        <button
                           @click="togglePhoneStatus(phone)"
                           :title="phone.isActive ? 'Desativar' : 'Ativar'"
                           class="p-1 rounded transition-colors"
@@ -85,8 +85,8 @@ const Customers = {
               </tbody>
             </table>
           </div>
-          
-          <empty-state 
+
+          <empty-state
             v-else
             icon="users"
             title="Nenhum cliente cadastrado"
@@ -94,9 +94,9 @@ const Customers = {
           </empty-state>
         </div>
       </main>
-      
-      <modal 
-        :show="showModal" 
+
+      <modal
+        :show="showModal"
         :title="editingId ? 'Editar Cliente' : 'Novo Cliente'"
         :loading="saving"
         @close="closeModal"
@@ -104,27 +104,27 @@ const Customers = {
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Nome *</label>
-            <input 
-              type="text" 
-              v-model="form.firstName" 
-              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" 
+            <input
+              type="text"
+              v-model="form.firstName"
+              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               placeholder="Digite o nome"
               required>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Sobrenome *</label>
-            <input 
-              type="text" 
-              v-model="form.lastName" 
-              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" 
+            <input
+              type="text"
+              v-model="form.lastName"
+              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               placeholder="Digite o sobrenome"
               required>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Apelido</label>
-            <input 
-              type="text" 
-              v-model="form.nickname" 
+            <input
+              type="text"
+              v-model="form.nickname"
               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               placeholder="Digite o apelido (opcional)">
           </div>
@@ -132,14 +132,14 @@ const Customers = {
             <label class="block text-sm font-semibold text-gray-700 mb-2">Telefones *</label>
             <div class="space-y-2">
               <div v-for="(phone, index) in form.phoneNumbers" :key="index" class="flex gap-2">
-                <input 
-                  type="tel" 
-                  v-model="form.phoneNumbers[index]" 
+                <input
+                  type="tel"
+                  v-model="form.phoneNumbers[index]"
                   @input="updatePhone(index, $event.target.value)"
-                  class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" 
+                  class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
                   placeholder="+5511999999999"
                   required>
-                <button 
+                <button
                   v-if="form.phoneNumbers.length > 1"
                   @click="removePhone(index)"
                   type="button"
@@ -149,7 +149,7 @@ const Customers = {
                   </svg>
                 </button>
               </div>
-              <button 
+              <button
                 @click="addPhone"
                 type="button"
                 class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors font-medium">
@@ -189,8 +189,8 @@ const Customers = {
         firstName: customer.firstName,
         lastName: customer.lastName,
         nickname: customer.nickname || '',
-        phoneNumbers: customer.phoneNumbers?.length 
-          ? customer.phoneNumbers.map(p => p.phoneNumber) 
+        phoneNumbers: customer.phoneNumbers?.length
+          ? customer.phoneNumbers.map(p => p.phoneNumber)
           : ['']
       };
       this.showModal = true;
@@ -210,18 +210,18 @@ const Customers = {
       try {
         const newStatus = !phone.isActive;
         const action = newStatus ? 'ativar' : 'desativar';
-        
+
         if (!confirm(`Tem certeza que deseja ${action} este telefone?`)) {
           return;
         }
-        
+
         await api.put(`/api/phone-numbers/${phone.id}`, {
           isActive: newStatus
         });
-        
+
         // Atualiza localmente
         phone.isActive = newStatus;
-        
+
         store.showToast(`Telefone ${newStatus ? 'ativado' : 'desativado'} com sucesso!`, 'success');
       } catch (error) {
         console.error('Erro ao alterar status do telefone:', error);
@@ -231,7 +231,7 @@ const Customers = {
     async saveCustomer() {
       console.log('=== SALVANDO CLIENTE ===');
       console.log('Form completo:', JSON.parse(JSON.stringify(this.form)));
-      
+
       this.saving = true;
       try {
         // Validações básicas
@@ -240,35 +240,35 @@ const Customers = {
           this.saving = false;
           return;
         }
-        
+
         if (!this.form.lastName || !this.form.lastName.trim()) {
           store.showToast('Sobrenome é obrigatório', 'error');
           this.saving = false;
           return;
         }
-        
+
         // Filtra telefones vazios e remove espaços
         const validPhones = this.form.phoneNumbers
           .map(p => String(p).trim())
           .filter(p => p.length > 0);
-        
+
         console.log('Telefones válidos após filtro:', validPhones);
-        
+
         if (validPhones.length === 0) {
           store.showToast('Adicione pelo menos um telefone', 'error');
           this.saving = false;
           return;
         }
-        
+
         const data = {
           firstName: this.form.firstName,
           lastName: this.form.lastName,
           nickname: this.form.nickname,
           phoneNumbers: validPhones
         };
-        
+
         console.log('Dados a serem enviados:', JSON.stringify(data, null, 2));
-        
+
         if (this.editingId) {
           console.log('Atualizando cliente ID:', this.editingId);
           const response = await api.put('/api/customers/' + this.editingId, data);
@@ -280,7 +280,7 @@ const Customers = {
           console.log('Resposta do servidor (create):', response);
           store.showToast('Cliente criado com sucesso!', 'success');
         }
-        
+
         this.closeModal();
         await this.loadCustomers();
       } catch (error) {
@@ -291,7 +291,7 @@ const Customers = {
     },
     async deleteCustomer(id) {
       if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
-      
+
       try {
         await api.delete('/api/customers/' + id);
         store.showToast('Cliente excluído com sucesso!', 'success');

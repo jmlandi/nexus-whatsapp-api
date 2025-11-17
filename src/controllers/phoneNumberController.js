@@ -17,7 +17,7 @@ class PhoneNumberController {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || parseInt(process.env.DEFAULT_PAGE_SIZE) || 20;
       const maxLimit = parseInt(process.env.MAX_PAGE_SIZE) || 100;
-      
+
       const pageSize = Math.min(limit, maxLimit);
       const skip = (page - 1) * pageSize;
 
@@ -102,7 +102,7 @@ class PhoneNumberController {
   async create(req, res) {
     try {
       let phoneNumbers;
-      
+
       // Aceita tanto um único número quanto uma lista
       if (req.body.phoneNumbers && Array.isArray(req.body.phoneNumbers)) {
         phoneNumbers = req.body.phoneNumbers;
@@ -110,7 +110,7 @@ class PhoneNumberController {
         // Recebeu um único número, coloca em array
         phoneNumbers = [req.body];
       } else {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Dados inválidos',
           message: 'Envie um número com customerId e phoneNumber, ou uma lista de números'
         });
@@ -185,9 +185,9 @@ class PhoneNumberController {
       });
     } catch (error) {
       logger.error(`Erro ao criar números: ${error.message}`);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Erro ao criar números',
-        message: error.message 
+        message: error.message
       });
     }
   }

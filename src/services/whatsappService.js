@@ -1,36 +1,71 @@
 /**
- * Service do WhatsApp Business API
- * Gerencia envio de mensagens WhatsApp via API oficial do Meta
- * Documentação: https://developers.facebook.com/docs/whatsapp/cloud-api
+ * WhatsApp Business API Service
+ *
+ * Manages WhatsApp message sending via Meta's official WhatsApp Cloud API.
+ * Supports text messages, media, templates, and interactive buttons.
+ *
+ * @class WhatsAppService
+ * @see {@link https://developers.facebook.com/docs/whatsapp/cloud-api|WhatsApp Cloud API Documentation}
+ *
+ * @example
+ * const whatsappService = new WhatsAppService();
+ *
+ * // Send simple text message
+ * await whatsappService.sendMessage('5511999999999', 'Hello!');
+ *
+ * // Send template with variables
+ * await whatsappService.sendTemplate(
+ *   '5511999999999',
+ *   'report_notification',
+ *   'pt_BR',
+ *   [{ type: 'body', parameters: [{ type: 'text', text: 'John' }] }]
+ * );
  */
 
 const axios = require('axios');
 const logger = require('../utils/logger');
 
 class WhatsAppService {
+  /**
+   * Initialize WhatsApp Service with API credentials
+   *
+   * @constructor
+   * @throws {Error} If required environment variables are missing
+   */
   constructor() {
     this.apiVersion = process.env.WHATSAPP_API_VERSION || 'v21.0';
     this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
     this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
     this.businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
-    
+
     this.baseUrl = `https://graph.facebook.com/${this.apiVersion}`;
-    
+
     // Configuração do cliente HTTP
     this.client = axios.create({
       baseURL: this.baseUrl,
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json'
       }
     });
   }
 
   /**
-   * Envia mensagem de texto simples via WhatsApp
-   * @param {string} to - Número de destino (formato internacional sem +)
-   * @param {string} message - Conteúdo da mensagem
-   * @returns {Promise<Object>} Resposta da API do WhatsApp
+   * Send simple text message via WhatsApp
+   *
+   * Sends a plain text message to a WhatsApp number. Automatically formats
+   * the phone number to international format (removes non-numeric characters).
+   *
+   * @async
+   * @param {string} to - Destination phone number (any format, will be cleaned)
+   * @param {string} message - Message text content (max 4096 characters)
+   * @returns {Promise<{success: boolean, messageId: string, whatsappMessageId: string}>} Send result
+   * @throws {Error} If API call fails or credentials are invalid
+   *
+   * @example
+   * // Send message (accepts various formats)
+   * await whatsappService.sendMessage('+55 11 99999-9999', 'Hello World!');
+   * await whatsappService.sendMessage('5511999999999', 'Hello World!');
    */
   async sendMessage(to, message) {
     try {
@@ -61,12 +96,47 @@ class WhatsAppService {
   }
 
   /**
-   * Envia template de mensagem aprovado do WhatsApp
-   * @param {string} to - Número de destino
-   * @param {string} templateName - Nome do template aprovado
-   * @param {string} languageCode - Código do idioma (ex: pt_BR, en_US)
-   * @param {Array} components - Componentes do template (header, body, buttons)
-   * @returns {Promise<Object>} Resposta da API do WhatsApp
+   * Send WhatsApp template message
+   *
+   * Sends a pre-approved message template. Templates must be created and approved
+   * in Meta Business Manager before use. Supports variable substitution, media headers,
+   * and interactive buttons.
+   *
+   * @async
+   * @param {string} to - Destination phone number (any format)
+   * @param {string} templateName - Name of approved template (e.g., 'report_notification')
+   * @param {string} [languageCode='pt_BR'] - ISO language code (pt_BR, en_US, es_ES)
+   * @param {Array<Object>} [components=[]] - Template components for variable substitution
+   * @param {string} components[].type - Component type ('header', 'body', 'button')
+   * @param {Array<Object>} components[].parameters - Variable values to substitute
+   * @returns {Promise<{success: boolean, messageId: string, whatsappMessageId: string}>} Send result
+   * @throws {Error} If template not found or API call fails
+   *
+   * @example
+   * // Send template with body variables
+   * await whatsappService.sendTemplate(
+   *   '5511999999999',
+   *   'report_notification',
+   *   'pt_BR',
+   *   [{
+   *     type: 'body',
+   *     parameters: [
+   *       { type: 'text', text: 'John Doe' },
+   *       { type: 'text', text: 'November 2025' }
+   *     ]
+   *   }]
+   * );
+   *
+   * // Send template with document header
+   * await whatsappService.sendTemplate(
+   *   '5511999999999',
+   *   'report_with_pdf',
+   *   'pt_BR',
+   *   [{
+   *     type: 'header',
+   *     parameters: [{ type: 'document', document: { link: 'https://...' } }]
+   *   }]
+   * );
    */
   async sendTemplate(to, templateName, languageCode = 'pt_BR', components = []) {
     try {
@@ -152,25 +222,34 @@ class WhatsAppService {
   }
 
   /**
-   * Marca mensagem como lida
-   * @param {string} messageId - ID da mensagem a marcar como lida
-   * @returns {Promise<Object>} Resposta da API
+   * Mark message as read
+   *
+   * Sends a read receipt for an incoming message. This updates the message
+   * status on the sender's device to show double blue checkmarks.
+   *
+   * @async
+   * @param {string} messageId - WhatsApp message ID to mark as read
+   * @returns {Promise<{success: boolean}>} Operation result
+   * @throws {Error} If API call fails
+   *
+   * @example
+   * await whatsappService.markAsRead('wamid.XXX==');
    */
   async markAsRead(messageId) {
     try {
-      const response = await this.client.post(`/${this.phoneNumberId}/messages`, {
+      await this.client.post(`/${this.phoneNumberId}/messages`, {
         messaging_product: 'whatsapp',
         status: 'read',
         message_id: messageId
       });
 
-      logger.info(`Mensagem marcada como lida: ${messageId}`);
+      logger.info(`Message marked as read: ${messageId}`);
       return {
         success: true
       };
     } catch (error) {
-      logger.error(`Erro ao marcar mensagem como lida: ${error.response?.data || error.message}`);
-      throw new Error(`Falha ao marcar como lida: ${error.response?.data?.error?.message || error.message}`);
+      logger.error(`Error marking message as read: ${error.response?.data || error.message}`);
+      throw new Error(`Failed to mark as read: ${error.response?.data?.error?.message || error.message}`);
     }
   }
 
@@ -191,10 +270,7 @@ class WhatsAppService {
         components: components
       };
 
-      const response = await this.client.post(
-        `/${this.businessAccountId}/message_templates`,
-        payload
-      );
+      const response = await this.client.post(`/${this.businessAccountId}/message_templates`, payload);
 
       logger.info(`Template criado: ${name} (ID: ${response.data.id})`);
       return {
@@ -215,14 +291,11 @@ class WhatsAppService {
    */
   async listTemplates(limit = 100) {
     try {
-      const response = await this.client.get(
-        `/${this.businessAccountId}/message_templates`,
-        {
-          params: {
-            limit: limit
-          }
+      const response = await this.client.get(`/${this.businessAccountId}/message_templates`, {
+        params: {
+          limit: limit
         }
-      );
+      });
 
       logger.info(`Templates listados: ${response.data.data.length} encontrados`);
       return {
@@ -237,28 +310,34 @@ class WhatsAppService {
   }
 
   /**
-   * Deleta um template de mensagem
-   * @param {string} templateName - Nome do template
-   * @returns {Promise<Object>} Resposta da API
+   * Delete message template
+   *
+   * Removes an approved message template from your WhatsApp Business Account.
+   * Use with caution as this action cannot be undone.
+   *
+   * @async
+   * @param {string} templateName - Name of template to delete
+   * @returns {Promise<{success: boolean}>} Deletion result
+   * @throws {Error} If template not found or API call fails
+   *
+   * @example
+   * await whatsappService.deleteTemplate('old_promo_template');
    */
   async deleteTemplate(templateName) {
     try {
-      const response = await this.client.delete(
-        `/${this.businessAccountId}/message_templates`,
-        {
-          params: {
-            name: templateName
-          }
+      await this.client.delete(`/${this.businessAccountId}/message_templates`, {
+        params: {
+          name: templateName
         }
-      );
+      });
 
-      logger.info(`Template deletado: ${templateName}`);
+      logger.info(`Template deleted: ${templateName}`);
       return {
         success: true
       };
     } catch (error) {
-      logger.error(`Erro ao deletar template: ${error.response?.data || error.message}`);
-      throw new Error(`Falha ao deletar template: ${error.response?.data?.error?.message || error.message}`);
+      logger.error(`Error deleting template: ${error.response?.data || error.message}`);
+      throw new Error(`Failed to delete template: ${error.response?.data?.error?.message || error.message}`);
     }
   }
 
@@ -282,7 +361,7 @@ class WhatsAppService {
     try {
       // Tenta buscar informações do número de telefone
       const response = await this.client.get(`/${this.phoneNumberId}`);
-      
+
       return {
         success: true,
         status: 'connected',

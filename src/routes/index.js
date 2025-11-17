@@ -27,7 +27,7 @@ router.get('/health', (req, res) => {
     database: !!process.env.DATABASE_URL,
     anthropic: {
       configured: !!process.env.ANTHROPIC_API_KEY,
-      keyPrefix: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0, 10) + '...' : 'NOT SET',
+      keyPrefix: process.env.ANTHROPIC_API_KEY ? `${process.env.ANTHROPIC_API_KEY.substring(0, 10)}...` : 'NOT SET',
       model: process.env.ANTHROPIC_MODEL || 'default',
       maxTokens: process.env.ANTHROPIC_MAX_TOKENS || 'default'
     },
@@ -41,7 +41,7 @@ router.get('/health', (req, res) => {
       phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || 'NOT SET'
     }
   };
-  
+
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),

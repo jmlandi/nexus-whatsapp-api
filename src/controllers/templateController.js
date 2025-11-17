@@ -11,7 +11,7 @@ class TemplateController {
    * Cria um novo template de mensagem no WhatsApp
    * POST /api/template
    * Body: { name, category, language, components }
-   * 
+   *
    * Exemplo de body:
    * {
    *   "name": "welcome_message",
@@ -50,33 +50,28 @@ class TemplateController {
 
       // Validações
       if (!name || !category || !language || !components) {
-        return res.status(400).json({ 
-          error: 'name, category, language e components são obrigatórios' 
+        return res.status(400).json({
+          error: 'name, category, language e components são obrigatórios'
         });
       }
 
       // Valida categoria
       const validCategories = ['MARKETING', 'UTILITY', 'AUTHENTICATION'];
       if (!validCategories.includes(category.toUpperCase())) {
-        return res.status(400).json({ 
-          error: `Categoria inválida. Use: ${validCategories.join(', ')}` 
+        return res.status(400).json({
+          error: `Categoria inválida. Use: ${validCategories.join(', ')}`
         });
       }
 
       // Valida componentes
       if (!Array.isArray(components) || components.length === 0) {
-        return res.status(400).json({ 
-          error: 'components deve ser um array não vazio' 
+        return res.status(400).json({
+          error: 'components deve ser um array não vazio'
         });
       }
 
       // Cria o template via API do WhatsApp
-      const result = await whatsappService.createTemplate(
-        name,
-        category,
-        language,
-        components
-      );
+      const result = await whatsappService.createTemplate(name, category, language, components);
 
       logger.info(`Template criado: ${name}`);
 
@@ -87,9 +82,9 @@ class TemplateController {
       });
     } catch (error) {
       logger.error(`Erro ao criar template: ${error.message}`);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Erro ao criar template',
-        details: error.message 
+        details: error.message
       });
     }
   }
@@ -112,9 +107,9 @@ class TemplateController {
       });
     } catch (error) {
       logger.error(`Erro ao listar templates: ${error.message}`);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Erro ao listar templates',
-        details: error.message 
+        details: error.message
       });
     }
   }
@@ -128,8 +123,8 @@ class TemplateController {
       const { name } = req.params;
 
       if (!name) {
-        return res.status(400).json({ 
-          error: 'Nome do template é obrigatório' 
+        return res.status(400).json({
+          error: 'Nome do template é obrigatório'
         });
       }
 
@@ -143,9 +138,9 @@ class TemplateController {
       });
     } catch (error) {
       logger.error(`Erro ao deletar template: ${error.message}`);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Erro ao deletar template',
-        details: error.message 
+        details: error.message
       });
     }
   }
@@ -153,13 +148,13 @@ class TemplateController {
   /**
    * Exemplo de criação de template para relatórios
    * POST /api/template/create-report-template
-   * 
+   *
    * Cria um template padrão para envio de relatórios
    */
   async createReportTemplate(req, res) {
     try {
       const templateName = req.body.name || 'wn7_relatorio_mensal';
-      
+
       const components = [
         {
           type: 'HEADER',
@@ -189,12 +184,7 @@ class TemplateController {
         }
       ];
 
-      const result = await whatsappService.createTemplate(
-        templateName,
-        'MARKETING',
-        'pt_BR',
-        components
-      );
+      const result = await whatsappService.createTemplate(templateName, 'MARKETING', 'pt_BR', components);
 
       logger.info(`Template de relatório criado: ${templateName}`);
 
@@ -204,17 +194,14 @@ class TemplateController {
         templateName,
         usage: {
           description: 'Use este template para enviar relatórios mensais',
-          variables: [
-            '{{1}} - Nome do cliente',
-            '{{2}} - Período do relatório (ex: Janeiro 2024)'
-          ]
+          variables: ['{{1}} - Nome do cliente', '{{2}} - Período do relatório (ex: Janeiro 2024)']
         }
       });
     } catch (error) {
       logger.error(`Erro ao criar template de relatório: ${error.message}`);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Erro ao criar template de relatório',
-        details: error.message 
+        details: error.message
       });
     }
   }

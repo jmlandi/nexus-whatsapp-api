@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
   if (req.query['hub.mode'] && req.query['hub.verify_token']) {
     return messageController.verifyWebhook(req, res);
   }
-  
+
   // Demais rotas precisam de autenticação
   return authenticate(req, res, () => {
     if (req.query.id) {

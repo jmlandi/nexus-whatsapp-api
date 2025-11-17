@@ -8,12 +8,7 @@ const { authenticate } = require('../middleware/auth');
  * @desc Upload de documento PDF para um cliente
  * @access Private
  */
-router.post(
-  '/upload',
-  authenticate,
-  documentController.upload.single('file'),
-  documentController.uploadDocument
-);
+router.post('/upload', authenticate, documentController.upload.single('file'), documentController.uploadDocument);
 
 /**
  * @route GET /api/document

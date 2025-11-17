@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
  */
 function getS3Client() {
   const awsRegion = process.env.AWS_REGION || 'us-east-2';
-  
+
   return new S3Client({
     region: awsRegion,
     credentials: {
@@ -107,9 +107,9 @@ const uploadDocument = async (req, res) => {
 
     await s3Client.send(new PutObjectCommand(uploadParams));
 
-    logger.info('Upload S3 bem-sucedido', { 
+    logger.info('Upload S3 bem-sucedido', {
       bucket: uploadParams.Bucket,
-      key: fileName 
+      key: fileName
     });
 
     // URL do arquivo no S3
@@ -147,7 +147,7 @@ const uploadDocument = async (req, res) => {
       report
     });
   } catch (error) {
-    logger.error('Erro ao fazer upload do documento', { 
+    logger.error('Erro ao fazer upload do documento', {
       error: error.message,
       stack: error.stack,
       code: error.code,
@@ -156,13 +156,13 @@ const uploadDocument = async (req, res) => {
       awsRegion: process.env.AWS_REGION,
       bucket: process.env.AWS_S3_BUCKET_NAME
     });
-    
+
     // Retorna detalhes específicos baseado no tipo de erro
     const errorResponse = {
       error: 'Erro no servidor',
       message: 'Ocorreu um erro ao fazer upload do documento'
     };
-    
+
     // Erros específicos do AWS S3
     if (error.name === 'NoSuchBucket') {
       errorResponse.message = 'Bucket S3 não encontrado';
@@ -182,12 +182,12 @@ const uploadDocument = async (req, res) => {
     } else if (error.message) {
       errorResponse.details = error.message;
     }
-    
+
     // Em desenvolvimento, retorna o stack trace
     if (process.env.NODE_ENV === 'development') {
       errorResponse.stack = error.stack;
     }
-    
+
     res.status(500).json(errorResponse);
   }
 };
@@ -200,10 +200,7 @@ const getCustomerDocuments = async (req, res) => {
   try {
     const { customerId } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const pageSize = Math.min(
-      parseInt(req.query.pageSize) || 20,
-      parseInt(process.env.MAX_PAGE_SIZE) || 100
-    );
+    const pageSize = Math.min(parseInt(req.query.pageSize) || 20, parseInt(process.env.MAX_PAGE_SIZE) || 100);
 
     const skip = (page - 1) * pageSize;
 
@@ -261,10 +258,7 @@ const getCustomerDocuments = async (req, res) => {
 const getAllDocuments = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = Math.min(
-      parseInt(req.query.pageSize) || 20,
-      parseInt(process.env.MAX_PAGE_SIZE) || 100
-    );
+    const pageSize = Math.min(parseInt(req.query.pageSize) || 20, parseInt(process.env.MAX_PAGE_SIZE) || 100);
 
     const skip = (page - 1) * pageSize;
 

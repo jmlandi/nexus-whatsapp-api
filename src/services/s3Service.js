@@ -1,6 +1,19 @@
 /**
- * Service do AWS S3
- * Gerencia upload e download de relatórios em PDF
+ * AWS S3 Service - File Storage Management
+ *
+ * Manages upload, download, and deletion of marketing report PDFs in AWS S3.
+ * Generates presigned URLs for secure temporary access to private files.
+ *
+ * @class S3Service
+ * @example
+ * const s3Service = new S3Service();
+ *
+ * // Upload report
+ * const result = await s3Service.uploadReport(pdfBuffer, 'customer-uuid', 'october-report.pdf');
+ * // Returns: { success: true, url: 'https://...', key: 'reports/customer-uuid/uuid.pdf' }
+ *
+ * // Get temporary download URL (valid for 1 hour)
+ * const signedUrl = await s3Service.getSignedDownloadUrl(result.key);
  */
 
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
@@ -9,6 +22,12 @@ const logger = require('../utils/logger');
 const { v4: uuidv4 } = require('uuid');
 
 class S3Service {
+  /**
+   * Initialize S3 Service with AWS credentials
+   *
+   * @constructor
+   * @throws {Error} If AWS credentials or bucket name are missing
+   */
   constructor() {
     this.client = new S3Client({
       region: process.env.AWS_REGION || 'us-east-1',
@@ -21,11 +40,23 @@ class S3Service {
   }
 
   /**
-   * Faz upload de arquivo PDF para o S3
-   * @param {Buffer} fileBuffer - Buffer do arquivo
-   * @param {string} customerId - ID do cliente
-   * @param {string} fileName - Nome original do arquivo
-   * @returns {Promise<Object>} URL e chave do arquivo no S3
+   * Upload PDF report to S3
+   *
+   * Uploads a PDF file with a unique UUID filename to organized folder structure.
+   * Files are stored in: reports/{customerId}/{uuid}.pdf
+   * Includes metadata for tracking: original filename, customer ID, upload date.
+   *
+   * @async
+   * @param {Buffer} fileBuffer - PDF file content as Buffer
+   * @param {string} customerId - UUID of the customer who owns this report
+   * @param {string} fileName - Original filename (e.g., 'october-report.pdf')
+   * @returns {Promise<{success: boolean, url: string, key: string}>} Upload result with public URL and S3 key
+   * @throws {Error} If upload fails due to network, permissions, or AWS errors
+   *
+   * @example
+   * const pdfBuffer = fs.readFileSync('report.pdf');
+   * const result = await s3Service.uploadReport(pdfBuffer, 'customer-uuid-123', 'october-2025.pdf');
+   * // Returns: { success: true, url: 'https://...', key: 'reports/customer-uuid-123/abc-123.pdf' }
    */
   async uploadReport(fileBuffer, customerId, fileName) {
     try {
@@ -47,11 +78,11 @@ class S3Service {
       });
 
       await this.client.send(command);
-      
+
       const url = `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-      
+
       logger.info(`Arquivo enviado para S3: ${key}`);
-      
+
       return {
         success: true,
         url: url,
@@ -64,10 +95,24 @@ class S3Service {
   }
 
   /**
-   * Gera URL assinada temporária para download
-   * @param {string} key - Chave do arquivo no S3
-   * @param {number} expiresIn - Tempo de expiração em segundos (padrão: 1 hora)
-   * @returns {Promise<string>} URL assinada
+   * Generate presigned URL for temporary secure access
+   *
+   * Creates a time-limited URL that grants read access to a private S3 object
+   * without requiring AWS credentials. Perfect for sharing reports with customers
+   * via WhatsApp or email while maintaining security.
+   *
+   * @async
+   * @param {string} key - S3 object key (e.g., 'reports/customer-uuid/file.pdf')
+   * @param {number} [expiresIn=3600] - URL expiration time in seconds (default: 1 hour)
+   * @returns {Promise<string>} Presigned URL valid for specified duration
+   * @throws {Error} If key not found or AWS credentials invalid
+   *
+   * @example
+   * // Get URL valid for 1 hour (default)
+   * const url1h = await s3Service.getSignedDownloadUrl('reports/customer-uuid/file.pdf');
+   *
+   * // Get URL valid for 24 hours
+   * const url24h = await s3Service.getSignedDownloadUrl('reports/customer-uuid/file.pdf', 86400);
    */
   async getSignedDownloadUrl(key, expiresIn = 3600) {
     try {
@@ -77,7 +122,7 @@ class S3Service {
       });
 
       const signedUrl = await getSignedUrl(this.client, command, { expiresIn });
-      
+
       logger.info(`URL assinada gerada para: ${key}`);
       return signedUrl;
     } catch (error) {
@@ -99,7 +144,7 @@ class S3Service {
       });
 
       await this.client.send(command);
-      
+
       logger.info(`Arquivo deletado do S3: ${key}`);
       return true;
     } catch (error) {

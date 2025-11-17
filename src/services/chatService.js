@@ -1,6 +1,22 @@
 /**
- * Service de Chat
- * Gerencia lógica de negócio relacionada aos chats
+ * Chat Service - Business Logic for Chat Management
+ *
+ * Orchestrates chat lifecycle, message handling, and AI-powered responses.
+ * Manages chat sessions between customers and the AI assistant via WhatsApp.
+ * Handles automatic chat timeouts and message routing.
+ *
+ * @class ChatService
+ * @example
+ * const chatService = new ChatService();
+ *
+ * // Get or create open chat
+ * const chat = await chatService.getOpenChat('customer-uuid', 'phone-uuid');
+ *
+ * // Process incoming message from customer
+ * await chatService.processIncomingMessage('chat-uuid', 'What were my results?', 'customer-uuid');
+ *
+ * // Close inactive chat
+ * await chatService.closeChat('chat-uuid');
  */
 
 const prisma = require('../utils/prisma');
@@ -10,10 +26,22 @@ const whatsappService = require('./whatsappService');
 
 class ChatService {
   /**
-   * Verifica se há chat aberto para um cliente e número de telefone
-   * @param {string} customerId - ID do cliente
-   * @param {string} phoneNumberId - ID do número de telefone
-   * @returns {Promise<Object|null>} Chat aberto ou null
+   * Find open chat for customer and phone number
+   *
+   * Searches for an active (isOpen: true) chat session for the given
+   * customer and phone number combination. Includes last 50 messages.
+   *
+   * @async
+   * @param {string} customerId - UUID of the customer
+   * @param {string} phoneNumberId - UUID of the phone number
+   * @returns {Promise<Object|null>} Open chat with messages, or null if none found
+   * @throws {Error} If database query fails
+   *
+   * @example
+   * const openChat = await chatService.getOpenChat('customer-uuid', 'phone-uuid');
+   * if (openChat) {
+   *   console.log(`Found open chat with ${openChat.messages.length} messages`);
+   * }
    */
   async getOpenChat(customerId, phoneNumberId) {
     try {
@@ -39,16 +67,26 @@ class ChatService {
   }
 
   /**
-   * Cria novo chat
-   * @param {string} customerId - ID do cliente
-   * @param {string} phoneNumberId - ID do número de telefone
-   * @returns {Promise<Object>} Chat criado
+   * Create new chat session
+   *
+   * Creates a new active chat between a customer and phone number.
+   * Prevents duplicate open chats for the same customer/phone combination.
+   *
+   * @async
+   * @param {string} customerId - UUID of the customer
+   * @param {string} phoneNumberId - UUID of the phone number
+   * @returns {Promise<Object>} Newly created chat object
+   * @throws {Error} If open chat already exists or database insert fails
+   *
+   * @example
+   * const newChat = await chatService.createChat('customer-uuid', 'phone-uuid');
+   * // Returns: { id: 'chat-uuid', customerId: '...', phoneNumberId: '...', isOpen: true, ... }
    */
   async createChat(customerId, phoneNumberId) {
     try {
       // Verifica se já existe chat aberto
       const existingChat = await this.getOpenChat(customerId, phoneNumberId);
-      
+
       if (existingChat) {
         throw new Error('Já existe um chat aberto para este cliente e número');
       }
@@ -70,11 +108,21 @@ class ChatService {
   }
 
   /**
-   * Adiciona mensagem a um chat
-   * @param {string} chatId - ID do chat
-   * @param {string} message - Conteúdo da mensagem
-   * @param {string} type - Tipo da mensagem (user, agent, wa_template)
-   * @returns {Promise<Object>} Mensagem criada
+   * Add message to chat
+   *
+   * Creates a new message record in the chat conversation.
+   * Validates that chat exists and is open before adding message.
+   *
+   * @async
+   * @param {string} chatId - UUID of the chat
+   * @param {string} message - Message text content
+   * @param {string} type - Message type: 'user' (customer), 'agent' (AI), or 'wa_template' (system)
+   * @returns {Promise<Object>} Created message object
+   * @throws {Error} If chat not found, closed, or database insert fails
+   *
+   * @example
+   * const userMsg = await chatService.addMessage('chat-uuid', 'Hello!', 'user');
+   * const aiMsg = await chatService.addMessage('chat-uuid', 'Hi! How can I help?', 'agent');
    */
   async addMessage(chatId, message, type) {
     try {
@@ -167,7 +215,7 @@ class ChatService {
   async closeStaleChats(minutes) {
     try {
       const staleChats = await this.getStaleChats(minutes);
-      
+
       let closedCount = 0;
       for (const chat of staleChats) {
         await this.closeChat(chat.id);
@@ -192,7 +240,7 @@ class ChatService {
     try {
       // Tenta encontrar chat aberto
       let chat = await this.getOpenChat(customerId, phoneNumberId);
-      
+
       // Se não encontrar, cria novo
       if (!chat) {
         chat = await this.createChat(customerId, phoneNumberId);
@@ -227,20 +275,13 @@ class ChatService {
       logger.info(`Processando mensagem com IA para chat ${chat.id}`);
 
       // Gera resposta usando Claude
-      const aiResponse = await aiService.generateResponse(
-        userMessage,
-        chat.customerId,
-        chat.id
-      );
+      const aiResponse = await aiService.generateResponse(userMessage, chat.customerId, chat.id);
 
       // Salva resposta da IA no chat
       const aiMessage = await this.addMessage(chat.id, aiResponse, 'agent');
 
       // Envia resposta via WhatsApp
-      const whatsappResult = await whatsappService.sendMessage(
-        phoneNumber,
-        aiResponse
-      );
+      const whatsappResult = await whatsappService.sendMessage(phoneNumber, aiResponse);
 
       logger.info(`Resposta da IA enviada via WhatsApp para chat ${chat.id}`);
 
@@ -249,18 +290,17 @@ class ChatService {
         aiMessage,
         whatsappResult
       };
-
     } catch (error) {
       logger.error(`Erro ao processar mensagem com IA: ${error.message}`);
-      
+
       // Em caso de erro, envia mensagem de fallback
       try {
-        const fallbackMessage = 'Desculpe, estou com dificuldades técnicas. ' +
-          'Um membro da equipe WN7 entrará em contato em breve! 😊';
-        
+        const fallbackMessage =
+          'Desculpe, estou com dificuldades técnicas. ' + 'Um membro da equipe WN7 entrará em contato em breve! 😊';
+
         await this.addMessage(chat.id, fallbackMessage, 'agent');
         await whatsappService.sendMessage(phoneNumber, fallbackMessage);
-        
+
         return {
           success: false,
           reason: 'AI_ERROR',

@@ -21,14 +21,14 @@ const logger = winston.createLogger({
   defaultMeta: { service: 'nexus-api' },
   transports: [
     // Log de erros em arquivo separado
-    new winston.transports.File({ 
-      filename: path.join('logs', 'error.log'), 
+    new winston.transports.File({
+      filename: path.join('logs', 'error.log'),
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5
     }),
     // Log completo em arquivo
-    new winston.transports.File({ 
+    new winston.transports.File({
       filename: path.join('logs', 'combined.log'),
       maxsize: 5242880, // 5MB
       maxFiles: 5
@@ -38,12 +38,11 @@ const logger = winston.createLogger({
 
 // Em desenvolvimento, também loga no console com formatação colorida
 if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple())
+    })
+  );
 }
 
 module.exports = logger;

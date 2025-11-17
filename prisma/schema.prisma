@@ -21,6 +21,8 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([email])
+  @@index([isActive])
   @@map("users")
 }
 
@@ -40,6 +42,9 @@ model Customer {
   phoneNumbers PhoneNumber[]
   chats        Chat[]
 
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([lastName, firstName])
   @@map("customers")
 }
 
@@ -62,6 +67,9 @@ model Report {
   @@index([customerId])
   @@index([startDate])
   @@index([endDate])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([customerId, startDate])
   @@map("reports")
 }
 
@@ -102,6 +110,8 @@ model Chat {
   @@index([customerId])
   @@index([phoneNumberId])
   @@index([isOpen])
+  @@index([updatedAt])
+  @@index([customerId, phoneNumberId, isOpen])
   @@map("chats")
 }
 

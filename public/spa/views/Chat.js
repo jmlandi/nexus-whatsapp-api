@@ -37,27 +37,27 @@ const Chat = {
   template: `
     <div class="flex h-screen">
       <app-sidebar current-page="chat"></app-sidebar>
-      
+
       <main class="flex-1 flex flex-col overflow-hidden">
-        <page-header 
-          title="Chat WhatsApp" 
+        <page-header
+          title="Chat WhatsApp"
           subtitle="Converse com seus clientes e gerencie chats ativos"
           action-label="Iniciar Chat"
           @action="openStartChatModal">
         </page-header>
-        
+
         <div class="flex-1 flex overflow-hidden">
           <!-- Lista de Chats -->
           <div class="w-96 border-r border-gray-200 bg-white flex flex-col">
             <div class="p-4 border-b border-gray-200">
               <h3 class="text-lg font-bold text-gray-900">Conversas</h3>
             </div>
-            
+
             <loading v-if="loading"></loading>
-            
+
             <div v-else-if="chats.length > 0" class="flex-1 overflow-y-auto">
-              <div 
-                v-for="chat in chats" 
+              <div
+                v-for="chat in chats"
                 :key="chat.id"
                 @click="selectChat(chat)"
                 :class="[
@@ -68,7 +68,7 @@ const Chat = {
                   <h4 class="font-semibold text-gray-900">
                     {{ chat.customer.firstName }} {{ chat.customer.lastName }}
                   </h4>
-                  <span 
+                  <span
                     :class="[
                       'px-2 py-1 text-xs font-semibold rounded-full',
                       chat.isOpen ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -83,15 +83,15 @@ const Chat = {
                 </div>
               </div>
             </div>
-            
-            <empty-state 
+
+            <empty-state
               v-else
               icon="chat"
               title="Nenhum chat encontrado"
               description="Inicie um novo chat com um cliente">
             </empty-state>
           </div>
-          
+
           <!-- Área de Mensagens -->
           <div class="flex-1 flex flex-col bg-gray-50">
             <div v-if="!selectedChat" class="flex-1 flex items-center justify-center">
@@ -102,7 +102,7 @@ const Chat = {
                 <p class="text-gray-500 text-lg">Selecione um chat para começar</p>
               </div>
             </div>
-            
+
             <div v-else class="flex-1 flex flex-col">
               <!-- Cabeçalho do Chat -->
               <div class="bg-white border-b border-gray-200 p-4">
@@ -114,13 +114,13 @@ const Chat = {
                     <p class="text-sm text-gray-600">{{ selectedChat.phoneNumber.phoneNumber }}</p>
                   </div>
                   <div class="flex gap-2">
-                    <button 
+                    <button
                       v-if="selectedChat.isOpen"
                       @click="closeChat"
                       class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold">
                       Fechar Chat
                     </button>
-                    <button 
+                    <button
                       @click="refreshMessages"
                       :disabled="loadingMessages"
                       class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
@@ -131,24 +131,24 @@ const Chat = {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Mensagens -->
               <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
                 <loading v-if="loadingMessages"></loading>
-                
+
                 <div v-else-if="messages.length > 0">
-                  <div 
-                    v-for="message in messages" 
+                  <div
+                    v-for="message in messages"
                     :key="message.id"
                     :class="[
                       'flex mb-4',
                       message.type === 'user' ? 'justify-start' : 'justify-end'
                     ]">
-                    <div 
+                    <div
                       :class="[
                         'max-w-md px-4 py-3 rounded-lg shadow',
-                        message.type === 'user' 
-                          ? 'bg-white text-gray-900' 
+                        message.type === 'user'
+                          ? 'bg-white text-gray-900'
                           : message.type === 'agent'
                           ? 'bg-indigo-600 text-white'
                           : 'bg-green-600 text-white'
@@ -161,25 +161,25 @@ const Chat = {
                     </div>
                   </div>
                 </div>
-                
-                <empty-state 
+
+                <empty-state
                   v-else
                   icon="chat"
                   title="Nenhuma mensagem"
                   description="Este chat ainda não tem mensagens">
                 </empty-state>
               </div>
-              
+
               <!-- Input de Mensagem -->
               <div v-if="selectedChat.isOpen" class="bg-white border-t border-gray-200 p-4">
                 <form @submit.prevent="sendMessage" class="flex gap-2">
-                  <input 
+                  <input
                     v-model="messageText"
                     type="text"
                     placeholder="Digite sua mensagem..."
                     class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
                     :disabled="sending">
-                  <button 
+                  <button
                     type="submit"
                     :disabled="!messageText.trim() || sending"
                     class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
@@ -187,7 +187,7 @@ const Chat = {
                   </button>
                 </form>
               </div>
-              
+
               <div v-else class="bg-yellow-50 border-t border-yellow-200 p-4 text-center">
                 <p class="text-yellow-800 font-semibold">Este chat está fechado. Não é possível enviar mensagens.</p>
               </div>
@@ -195,10 +195,10 @@ const Chat = {
           </div>
         </div>
       </main>
-      
+
       <!-- Modal Iniciar Chat -->
-      <modal 
-        :show="showStartChatModal" 
+      <modal
+        :show="showStartChatModal"
         title="Iniciar Novo Chat"
         :loading="sending"
         @close="closeStartChatModal"
@@ -206,8 +206,8 @@ const Chat = {
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Cliente</label>
-            <select 
-              v-model="startChatForm.customerId" 
+            <select
+              v-model="startChatForm.customerId"
               @change="onCustomerChange"
               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required>
@@ -217,11 +217,11 @@ const Chat = {
               </option>
             </select>
           </div>
-          
+
           <div v-if="startChatForm.customerId">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Número de Telefone</label>
-            <select 
-              v-model="startChatForm.phoneNumberId" 
+            <select
+              v-model="startChatForm.phoneNumberId"
               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required>
               <option value="">Selecione um telefone</option>
@@ -230,11 +230,11 @@ const Chat = {
               </option>
             </select>
           </div>
-          
+
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Template</label>
-            <select 
-              v-model="startChatForm.templateName" 
+            <select
+              v-model="startChatForm.templateName"
               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required>
               <option value="">Selecione um template</option>
@@ -243,7 +243,7 @@ const Chat = {
               </option>
             </select>
           </div>
-          
+
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p class="text-sm text-blue-800">
               <strong>Nota:</strong> O template será enviado via WhatsApp para iniciar a conversa com o cliente.
@@ -276,10 +276,10 @@ const Chat = {
           api.get('/api/chats?limit=100'),
           api.get('/api/customers?limit=100')
         ]);
-        
+
         this.chats = chatsResponse.chats || [];
         this.customers = customersResponse.customers || [];
-        
+
         // Tenta carregar templates, mas não falha se der erro
         try {
           const templatesResponse = await api.get('/api/templates');
@@ -295,20 +295,20 @@ const Chat = {
         this.loading = false;
       }
     },
-    
+
     async selectChat(chat) {
       this.selectedChat = chat;
       await this.loadMessages();
     },
-    
+
     async loadMessages() {
       if (!this.selectedChat) return;
-      
+
       this.loadingMessages = true;
       try {
         const response = await api.get(`/api/messages?chat_id=${this.selectedChat.id}&limit=100`);
         this.messages = response.messages || [];
-        
+
         // Scroll para o final após carregar mensagens
         this.$nextTick(() => {
           this.scrollToBottom();
@@ -320,19 +320,19 @@ const Chat = {
         this.loadingMessages = false;
       }
     },
-    
+
     async refreshMessages(silent = false) {
       if (!this.selectedChat) return;
-      
+
       if (!silent) {
         this.loadingMessages = true;
       }
-      
+
       try {
         const response = await api.get(`/api/messages?chat_id=${this.selectedChat.id}&limit=100`);
         const oldLength = this.messages.length;
         this.messages = response.messages || [];
-        
+
         // Se há novas mensagens, scroll para o final
         if (this.messages.length > oldLength) {
           this.$nextTick(() => {
@@ -347,10 +347,10 @@ const Chat = {
         }
       }
     },
-    
+
     async sendMessage() {
       if (!this.messageText.trim() || !this.selectedChat) return;
-      
+
       this.sending = true;
       try {
         // Envia mensagem via API do chat
@@ -358,7 +358,7 @@ const Chat = {
           chatId: this.selectedChat.id,
           message: this.messageText
         });
-        
+
         // Adiciona mensagem ao chat local
         const newMessage = {
           id: Date.now().toString(),
@@ -367,20 +367,20 @@ const Chat = {
           type: 'agent',
           createdAt: new Date().toISOString()
         };
-        
+
         this.messages.push(newMessage);
         this.messageText = '';
-        
+
         // Scroll para o final
         this.$nextTick(() => {
           this.scrollToBottom();
         });
-        
+
         // Atualiza mensagens do servidor após 2 segundos
         setTimeout(() => {
           this.refreshMessages(true);
         }, 2000);
-        
+
         store.showToast('Mensagem enviada com sucesso!', 'success');
       } catch (error) {
         console.error('Erro ao enviar mensagem:', error);
@@ -389,34 +389,34 @@ const Chat = {
         this.sending = false;
       }
     },
-    
+
     async closeChat() {
       if (!this.selectedChat) return;
-      
+
       if (!confirm('Tem certeza que deseja fechar este chat?')) {
         return;
       }
-      
+
       try {
         await api.post('/api/chats/close-chat', {
           chatId: this.selectedChat.id
         });
-        
+
         this.selectedChat.isOpen = false;
-        
+
         // Atualiza o chat na lista
         const chatIndex = this.chats.findIndex(c => c.id === this.selectedChat.id);
         if (chatIndex !== -1) {
           this.chats[chatIndex].isOpen = false;
         }
-        
+
         store.showToast('Chat fechado com sucesso!', 'success');
       } catch (error) {
         console.error('Erro ao fechar chat:', error);
         store.showToast('Erro ao fechar chat', 'error');
       }
     },
-    
+
     openStartChatModal() {
       this.showStartChatModal = true;
       this.startChatForm = {
@@ -426,21 +426,21 @@ const Chat = {
         phoneNumbers: []
       };
     },
-    
+
     closeStartChatModal() {
       this.showStartChatModal = false;
     },
-    
+
     onCustomerChange() {
       this.startChatForm.phoneNumberId = '';
     },
-    
+
     async startChat() {
       if (!this.startChatForm.customerId || !this.startChatForm.phoneNumberId || !this.startChatForm.templateName) {
         store.showToast('Preencha todos os campos', 'error');
         return;
       }
-      
+
       this.sending = true;
       try {
         const response = await api.post('/api/chats/send-template', {
@@ -448,13 +448,13 @@ const Chat = {
           phoneNumberId: this.startChatForm.phoneNumberId,
           templateName: this.startChatForm.templateName
         });
-        
+
         store.showToast('Chat iniciado com sucesso!', 'success');
         this.closeStartChatModal();
-        
+
         // Recarrega lista de chats
         await this.loadData();
-        
+
         // Seleciona o novo chat
         if (response.chat) {
           const newChat = this.chats.find(c => c.id === response.chat.id);
@@ -470,20 +470,20 @@ const Chat = {
         this.sending = false;
       }
     },
-    
+
     scrollToBottom() {
       const container = this.$refs.messagesContainer;
       if (container) {
         container.scrollTop = container.scrollHeight;
       }
     },
-    
+
     formatDate(dateString) {
       const date = new Date(dateString);
       const now = new Date();
       const diff = now - date;
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      
+
       if (days === 0) {
         return 'Hoje';
       } else if (days === 1) {
@@ -494,12 +494,12 @@ const Chat = {
         return date.toLocaleDateString('pt-BR');
       }
     },
-    
+
     formatTime(dateString) {
       const date = new Date(dateString);
       return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     },
-    
+
     getMessageTypeLabel(type) {
       const labels = {
         user: 'Cliente',

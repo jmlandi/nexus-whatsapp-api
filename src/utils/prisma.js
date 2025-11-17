@@ -7,17 +7,15 @@ const logger = require('./logger');
 
 // Cria instância única do Prisma
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] 
-    : ['error']
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
 });
 
 // Event listeners para logs
-prisma.$on('query', (e) => {
+prisma.$on('query', e => {
   logger.debug(`Query: ${e.query} - Duration: ${e.duration}ms`);
 });
 
-prisma.$on('error', (e) => {
+prisma.$on('error', e => {
   logger.error(`Prisma Error: ${e.message}`);
 });
 

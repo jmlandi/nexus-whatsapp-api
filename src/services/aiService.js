@@ -1,6 +1,18 @@
 /**
- * Service de IA - Anthropic Claude
- * Gerencia interações com o modelo de IA para gerar respostas contextualizadas
+ * AI Service - Anthropic Claude Integration
+ *
+ * Manages interactions with Anthropic's Claude AI model to generate contextualized
+ * responses for customer chat conversations. Extracts PDF report content and
+ * builds comprehensive customer context for informed AI responses.
+ *
+ * @class AIService
+ * @example
+ * const aiService = new AIService();
+ * const response = await aiService.generateResponse(
+ *   'What were my campaign results?',
+ *   'customer-uuid-123',
+ *   'chat-uuid-456'
+ * );
  */
 
 const Anthropic = require('@anthropic-ai/sdk');
@@ -9,6 +21,13 @@ const logger = require('../utils/logger');
 const pdfService = require('./pdfService');
 
 class AIService {
+  /**
+   * Initialize AI Service with Anthropic client
+   * Validates API key and configures model settings from environment variables
+   *
+   * @constructor
+   * @throws {Error} If ANTHROPIC_API_KEY is missing or invalid
+   */
   constructor() {
     // Validação da API Key
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -16,20 +35,31 @@ class AIService {
     } else if (process.env.ANTHROPIC_API_KEY.includes('your_') || process.env.ANTHROPIC_API_KEY.length < 20) {
       logger.error('ANTHROPIC_API_KEY parece ser um placeholder ou inválida!');
     }
-    
+
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY
     });
     this.model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
     this.maxTokens = parseInt(process.env.ANTHROPIC_MAX_TOKENS) || 1024;
-    
+
     logger.info(`AIService inicializado - Modelo: ${this.model}, MaxTokens: ${this.maxTokens}`);
   }
 
   /**
-   * Gera contexto do cliente baseado em seus relatórios
-   * @param {string} customerId - ID do cliente
-   * @returns {Promise<string>} Contexto formatado
+   * Build customer context from their marketing reports
+   *
+   * Retrieves customer information and their recent reports (up to 2),
+   * extracts PDF content, and formats it into a comprehensive context
+   * string for the AI model.
+   *
+   * @async
+   * @param {string} customerId - UUID of the customer
+   * @returns {Promise<string>} Formatted context with customer info and report content
+   * @throws {Error} If database query fails
+   *
+   * @example
+   * const context = await aiService.getCustomerContext('uuid-123');
+   * // Returns: "Customer Information:\nName: John Doe\n\n=== MARKETING REPORTS ===..."
    */
   async getCustomerContext(customerId) {
     try {
@@ -50,53 +80,52 @@ class AIService {
       }
 
       // Monta contexto
-      let context = `Informações do Cliente:\n`;
+      let context = 'Informações do Cliente:\n';
       context += `Nome: ${customer.firstName} ${customer.lastName}`;
       if (customer.nickname) {
         context += ` (${customer.nickname})`;
       }
-      context += `\n\n`;
+      context += '\n\n';
 
       if (customer.reports.length > 0) {
-        context += `=== RELATÓRIOS DE MARKETING ===\n\n`;
-        
+        context += '=== RELATÓRIOS DE MARKETING ===\n\n';
+
         // Processa PDFs e extrai conteúdo
         for (let i = 0; i < customer.reports.length; i++) {
           const report = customer.reports[i];
           const startDate = new Date(report.startDate).toLocaleDateString('pt-BR');
           const endDate = new Date(report.endDate).toLocaleDateString('pt-BR');
-          
+
           context += `📊 RELATÓRIO ${i + 1} - Período: ${startDate} a ${endDate}\n`;
-          
+
           if (report.observations) {
             context += `Observações: ${report.observations}\n`;
           }
-          
+
           // Tenta extrair conteúdo do PDF
           try {
             logger.info(`Extraindo conteúdo do relatório: ${report.id}`);
             const pdfText = await pdfService.processPDF(report.reportUrl);
-            
+
             // Limita a 6000 caracteres por relatório
-            const limitedText = pdfText.length > 6000 
-              ? pdfText.substring(0, 6000) + '\n[... restante do relatório omitido por tamanho ...]'
-              : pdfText;
-            
+            const limitedText =
+              pdfText.length > 6000
+                ? `${pdfText.substring(0, 6000)}\n[... restante do relatório omitido por tamanho ...]`
+                : pdfText;
+
             context += `\nConteúdo do Relatório:\n${limitedText}\n`;
             context += `\n${'='.repeat(60)}\n\n`;
-            
           } catch (pdfError) {
             logger.error(`Erro ao processar PDF ${report.id}: ${pdfError.message}`);
-            context += `\n⚠️ Não foi possível extrair o conteúdo deste PDF.\n`;
+            context += '\n⚠️ Não foi possível extrair o conteúdo deste PDF.\n';
             context += `\n${'='.repeat(60)}\n\n`;
           }
         }
-        
-        context += `\n✅ Você tem acesso ao CONTEÚDO COMPLETO dos relatórios acima.\n`;
-        context += `Analise os dados, métricas e informações para responder perguntas específicas do cliente.\n`;
-        
+
+        context += '\n✅ Você tem acesso ao CONTEÚDO COMPLETO dos relatórios acima.\n';
+        context += 'Analise os dados, métricas e informações para responder perguntas específicas do cliente.\n';
       } else {
-        context += `Nenhum relatório disponível ainda.\n`;
+        context += 'Nenhum relatório disponível ainda.\n';
       }
 
       return context;
@@ -107,10 +136,20 @@ class AIService {
   }
 
   /**
-   * Gera contexto do histórico de conversa
-   * @param {string} chatId - ID do chat
-   * @param {number} limit - Número de mensagens a incluir
-   * @returns {Promise<Array>} Array de mensagens formatadas para Claude
+   * Build chat history context
+   *
+   * Retrieves recent messages from a chat and formats them for Claude's
+   * message format with proper role assignment (user/assistant).
+   *
+   * @async
+   * @param {string} chatId - UUID of the chat
+   * @param {number} [limit=10] - Maximum number of messages to retrieve
+   * @returns {Promise<Array<{role: string, content: string}>>} Array of formatted messages
+   * @throws {Error} If database query fails
+   *
+   * @example
+   * const history = await aiService.getChatHistory('chat-uuid', 5);
+   * // Returns: [{role: 'user', content: 'Hello'}, {role: 'assistant', content: 'Hi!'}]
    */
   async getChatHistory(chatId, limit = 10) {
     try {
@@ -132,17 +171,32 @@ class AIService {
   }
 
   /**
-   * Gera resposta usando Claude com contexto do cliente
-   * @param {string} userMessage - Mensagem do usuário
-   * @param {string} customerId - ID do cliente
-   * @param {string} chatId - ID do chat
-   * @returns {Promise<string>} Resposta gerada pela IA
+   * Generate AI response using Claude with customer context
+   *
+   * Main method that orchestrates customer context retrieval, chat history,
+   * and Claude API interaction to generate contextualized responses.
+   * Handles rate limits, API errors, and fallback responses.
+   *
+   * @async
+   * @param {string} userMessage - The user's message to respond to
+   * @param {string} customerId - UUID of the customer
+   * @param {string} chatId - UUID of the chat conversation
+   * @returns {Promise<string>} AI-generated response text
+   * @throws {Error} If API call fails or customer not found
+   *
+   * @example
+   * const response = await aiService.generateResponse(
+   *   'What were my campaign results last month?',
+   *   'customer-uuid-123',
+   *   'chat-uuid-456'
+   * );
+   * // Returns: "Based on your October report, your campaign achieved..."
    */
   async generateResponse(userMessage, customerId, chatId) {
     try {
       // Busca contexto do cliente
       const customerContext = await this.getCustomerContext(customerId);
-      
+
       // Busca histórico de conversa (exclui a mensagem atual)
       const chatHistory = await this.getChatHistory(chatId, 8);
 
@@ -195,7 +249,6 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
 
       logger.info(`Resposta gerada pela IA para chat ${chatId}`);
       return aiResponse;
-
     } catch (error) {
       // Log detalhado para debugging em produção
       const errorDetails = {
@@ -206,38 +259,50 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
         response: error.response?.data || null,
         stack: error.stack
       };
-      
-      console.error('=== ERRO AO GERAR RESPOSTA COM IA ===');
-      console.error(JSON.stringify(errorDetails, null, 2));
-      console.error('======================================');
-      
+
       logger.error('=== ERRO AO GERAR RESPOSTA COM IA ===');
       logger.error(JSON.stringify(errorDetails, null, 2));
       logger.error('======================================');
-      
+
       // Resposta fallback em caso de erro
-      return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
-             'Por favor, tente novamente em alguns instantes ou entre em contato diretamente com seu gerente de conta na WN7.';
+      return (
+        'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
+        'Por favor, tente novamente em alguns instantes ou entre em contato diretamente com seu gerente de conta na WN7.'
+      );
     }
   }
 
   /**
-   * Gera resposta simulada (sem salvar no banco)
-   * Usado pelo simulador de chat
-   * @param {string} userMessage - Mensagem do usuário
-   * @param {string} customerId - ID do cliente
-   * @param {Array} history - Histórico de mensagens
-   * @returns {Promise<string>} Resposta gerada pela IA
+   * Generate simulated AI response (for testing/simulator)
+   *
+   * Similar to generateResponse but uses provided history array instead
+   * of fetching from database. Used by the simulator endpoint for testing
+   * AI responses without creating actual chat records.
+   *
+   * @async
+   * @param {string} userMessage - The user's message to respond to
+   * @param {string} customerId - UUID of the customer
+   * @param {Array<{role: string, content: string}>} [history=[]] - Previous messages
+   * @returns {Promise<string>} AI-generated response text
+   * @throws {Error} If API call fails or customer not found
+   *
+   * @example
+   * const response = await aiService.generateSimulatedResponse(
+   *   'What were my results?',
+   *   'customer-uuid-123',
+   *   [{role: 'user', content: 'Hello'}, {role: 'assistant', content: 'Hi!'}]
+   * );
    */
   async generateSimulatedResponse(userMessage, customerId, history = []) {
-    console.log('🤖 generateSimulatedResponse chamado');
-    console.log(`Customer ID: ${customerId}`);
-    console.log(`Mensagem: ${userMessage}`);
-    console.log(`História: ${history.length} mensagens`);
-    
+    logger.debug('generateSimulatedResponse called', {
+      customerId,
+      messageLength: userMessage.length,
+      historyLength: history.length
+    });
+
     try {
       // Busca contexto do cliente
-      console.log('📋 Buscando contexto do cliente...');
+      logger.debug('Fetching customer context...');
       const customerContext = await this.getCustomerContext(customerId);
 
       // Monta o system prompt
@@ -277,10 +342,8 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       ];
 
       // Chama a API do Claude
-      console.log('☁️ Chamando Anthropic API...');
-      console.log(`Modelo: ${this.model}`);
-      console.log(`Max tokens: ${this.maxTokens}`);
-      
+      logger.debug('Calling Anthropic API...', { model: this.model, maxTokens: this.maxTokens });
+
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: this.maxTokens,
@@ -291,12 +354,8 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       // Extrai o texto da resposta
       const aiResponse = response.content[0].text;
 
-      console.log('✅ Resposta gerada com sucesso');
-      console.log(`Tamanho da resposta: ${aiResponse.length} caracteres`);
-      
-      logger.info(`Resposta simulada gerada para cliente ${customerId}`);
+      logger.info(`Simulated response generated for customer ${customerId}`, { responseLength: aiResponse.length });
       return aiResponse;
-
     } catch (error) {
       // Log detalhado para debugging em produção
       const errorDetails = {
@@ -307,18 +366,16 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
         response: error.response?.data || null,
         stack: error.stack
       };
-      
-      console.error('=== ERRO AO GERAR RESPOSTA SIMULADA ===');
-      console.error(JSON.stringify(errorDetails, null, 2));
-      console.error('========================================');
-      
+
       logger.error('=== ERRO AO GERAR RESPOSTA SIMULADA ===');
       logger.error(JSON.stringify(errorDetails, null, 2));
       logger.error('========================================');
-      
+
       // Resposta fallback em caso de erro
-      return 'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
-             'Por favor, tente novamente em alguns instantes ou entre em contato diretamente com seu gerente de conta na WN7.';
+      return (
+        'Desculpe, estou com dificuldades técnicas no momento. 😔\n\n' +
+        'Por favor, tente novamente em alguns instantes ou entre em contato diretamente com seu gerente de conta na WN7.'
+      );
     }
   }
 
@@ -332,10 +389,12 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: `Crie um resumo conciso e objetivo deste relatório de marketing em português:\n\n${reportText}`
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: `Crie um resumo conciso e objetivo deste relatório de marketing em português:\n\n${reportText}`
+          }
+        ]
       });
 
       return response.content[0].text;
@@ -355,10 +414,12 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: 10,
-        messages: [{
-          role: 'user',
-          content: `Analise o sentimento desta mensagem e responda apenas com: positive, neutral ou negative\n\nMensagem: "${message}"`
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: `Analise o sentimento desta mensagem e responda apenas com: positive, neutral ou negative\n\nMensagem: "${message}"`
+          }
+        ]
       });
 
       const sentiment = response.content[0].text.toLowerCase().trim();
@@ -386,10 +447,12 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: 10,
-        messages: [{
-          role: 'user',
-          content: 'Responda apenas: OK'
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: 'Responda apenas: OK'
+          }
+        ]
       });
 
       return response.content[0].text.includes('OK');

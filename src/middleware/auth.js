@@ -12,9 +12,9 @@ const authenticate = (req, res, next) => {
   try {
     // Extrai o token do header Authorization
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Token não fornecido',
         message: 'É necessário estar autenticado para acessar este recurso'
       });
@@ -22,9 +22,9 @@ const authenticate = (req, res, next) => {
 
     // Formato esperado: "Bearer <token>"
     const parts = authHeader.split(' ');
-    
+
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Token mal formatado',
         message: 'O token deve estar no formato: Bearer <token>'
       });
@@ -36,7 +36,7 @@ const authenticate = (req, res, next) => {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
         logger.warn('Token inválido ou expirado', { error: err.message });
-        return res.status(401).json({ 
+        return res.status(401).json({
           error: 'Token inválido',
           message: 'O token fornecido é inválido ou expirou'
         });
@@ -53,7 +53,7 @@ const authenticate = (req, res, next) => {
     });
   } catch (error) {
     logger.error('Erro no middleware de autenticação', { error: error.message });
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Erro na autenticação',
       message: 'Ocorreu um erro ao processar a autenticação'
     });
@@ -63,7 +63,7 @@ const authenticate = (req, res, next) => {
 /**
  * Gera um novo token JWT
  */
-const generateToken = (user) => {
+const generateToken = user => {
   const payload = {
     id: user.id,
     email: user.email,
@@ -76,7 +76,7 @@ const generateToken = (user) => {
 /**
  * Verifica se um token é válido sem lançar erro
  */
-const verifyToken = (token) => {
+const verifyToken = token => {
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {

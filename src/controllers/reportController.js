@@ -4,63 +4,47 @@
  */
 
 const prisma = require('../utils/prisma');
-const logger = require('../utils/logger');
+const BaseController = require('../utils/BaseController');
 const s3Service = require('../services/s3Service');
+const { isValidUUID, validateDateRange } = require('../utils/validators');
 
-class ReportController {
+class ReportController extends BaseController {
   /**
    * Lista todos os relatórios com paginação
    * GET /api/report
    */
   async getAll(req, res) {
-    try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || parseInt(process.env.DEFAULT_PAGE_SIZE) || 20;
-      const maxLimit = parseInt(process.env.MAX_PAGE_SIZE) || 100;
-      const customerId = req.query.customerId;
-      
-      const pageSize = Math.min(limit, maxLimit);
-      const skip = (page - 1) * pageSize;
+    return this.handleRequest(
+      req,
+      res,
+      async () => {
+        const pagination = this.parsePagination(req);
+        const filters = this.extractFilters(req.query, ['customerId']);
 
-      // Filtro por cliente se fornecido
-      const where = { isActive: true };
-      if (customerId) {
-        where.customerId = customerId;
-      }
-
-      const [reports, total] = await Promise.all([
-        prisma.report.findMany({
-          where,
-          skip,
-          take: pageSize,
-          orderBy: { startDate: 'desc' },
-          include: {
-            customer: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                nickname: true
+        const [reports, total] = await Promise.all([
+          prisma.report.findMany({
+            where: filters,
+            skip: pagination.skip,
+            take: pagination.pageSize,
+            orderBy: { startDate: 'desc' },
+            include: {
+              customer: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  nickname: true
+                }
               }
             }
-          }
-        }),
-        prisma.report.count({ where })
-      ]);
+          }),
+          prisma.report.count({ where: filters })
+        ]);
 
-      res.json({
-        reports,
-        pagination: {
-          page,
-          limit: pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize)
-        }
-      });
-    } catch (error) {
-      logger.error(`Erro ao listar relatórios: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao buscar relatórios' });
-    }
+        return this.paginatedResponse(res, reports, total, pagination, 'reports');
+      },
+      'listar relatórios'
+    );
   }
 
   /**
@@ -68,131 +52,141 @@ class ReportController {
    * GET /api/report?id=report_id
    */
   async getById(req, res) {
-    try {
-      const { id } = req.query;
+    return this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { id } = req.query;
 
-      if (!id) {
-        return res.status(400).json({ error: 'ID do relatório é obrigatório' });
-      }
+        if (!id || !isValidUUID(id)) {
+          return this.errorResponse(res, 'ID inválido', 'ID do relatório é inválido', 400);
+        }
 
-      const report = await prisma.report.findUnique({
-        where: { id },
-        include: {
-          customer: {
-            include: {
-              phoneNumbers: {
-                where: { isActive: true }
+        const report = await prisma.report.findUnique({
+          where: { id },
+          include: {
+            customer: {
+              include: {
+                phoneNumbers: {
+                  where: { isActive: true }
+                }
               }
             }
           }
+        });
+
+        if (!report) {
+          return this.errorResponse(res, 'Relatório não encontrado', 'Relatório não existe ou foi removido', 404);
         }
-      });
 
-      if (!report) {
-        return res.status(404).json({ error: 'Relatório não encontrado' });
-      }
+        // Gera URL assinada para download
+        const key = s3Service.extractKeyFromUrl(report.reportUrl);
+        if (key) {
+          report.downloadUrl = await s3Service.getSignedDownloadUrl(key);
+        }
 
-      // Gera URL assinada para download
-      const key = s3Service.extractKeyFromUrl(report.reportUrl);
-      if (key) {
-        report.downloadUrl = await s3Service.getSignedDownloadUrl(key);
-      }
-
-      res.json(report);
-    } catch (error) {
-      logger.error(`Erro ao buscar relatório: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao buscar relatório' });
-    }
+        return res.json(report);
+      },
+      'buscar relatório'
+    );
   }
 
   /**
    * Cria novos relatórios e faz upload para S3
    * POST /api/report
-   * Body: { reports: [{ customerId, reportTimestamp, observations?, file: base64 ou buffer }] }
-   * Ou com multipart/form-data para upload de arquivos
+   * Body: { reports: [{ customerId, startDate, endDate, observations?, file: base64 ou buffer }] }
    */
   async create(req, res) {
-    try {
-      const { reports } = req.body;
+    return this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { reports } = req.body;
 
-      if (!reports || !Array.isArray(reports) || reports.length === 0) {
-        return res.status(400).json({ error: 'Lista de relatórios é obrigatória' });
-      }
-
-      const createdReports = [];
-      const errors = [];
-
-      for (const reportData of reports) {
-        const { customerId, reportTimestamp, observations, file, fileName } = reportData;
-
-        if (!customerId || !reportTimestamp || !file) {
-          errors.push({ customerId, error: 'customerId, reportTimestamp e file são obrigatórios' });
-          continue;
+        if (!reports || !Array.isArray(reports) || reports.length === 0) {
+          return this.errorResponse(res, 'Dados inválidos', 'Lista de relatórios é obrigatória', 400);
         }
 
-        try {
-          // Verifica se cliente existe
-          const customer = await prisma.customer.findUnique({
-            where: { id: customerId }
-          });
+        const createdReports = [];
+        const errors = [];
 
-          if (!customer) {
-            errors.push({ customerId, error: 'Cliente não encontrado' });
+        for (const reportData of reports) {
+          const { customerId, startDate, endDate, observations, file, fileName } = reportData;
+
+          if (!customerId || !startDate || !endDate || !file) {
+            errors.push({ customerId, error: 'customerId, startDate, endDate e file são obrigatórios' });
             continue;
           }
 
-          // Converte base64 para buffer se necessário
-          let fileBuffer;
-          if (typeof file === 'string') {
-            // Remove prefixo data:application/pdf;base64, se existir
-            const base64Data = file.replace(/^data:application\/pdf;base64,/, '');
-            fileBuffer = Buffer.from(base64Data, 'base64');
-          } else {
-            fileBuffer = file;
+          // Valida o range de datas
+          const dateValidation = validateDateRange(startDate, endDate);
+          if (!dateValidation.valid) {
+            errors.push({ customerId, error: dateValidation.error });
+            continue;
           }
 
-          // Upload para S3
-          const uploadResult = await s3Service.uploadReport(
-            fileBuffer,
-            customerId,
-            fileName || `report_${Date.now()}.pdf`
-          );
+          try {
+            // Verifica se cliente existe
+            const customer = await prisma.customer.findUnique({
+              where: { id: customerId }
+            });
 
-          // Cria registro no banco
-          const report = await prisma.report.create({
-            data: {
+            if (!customer) {
+              errors.push({ customerId, error: 'Cliente não encontrado' });
+              continue;
+            }
+
+            // Converte base64 para buffer se necessário
+            let fileBuffer;
+            if (typeof file === 'string') {
+              const base64Data = file.replace(/^data:application\/pdf;base64,/, '');
+              fileBuffer = Buffer.from(base64Data, 'base64');
+            } else {
+              fileBuffer = file;
+            }
+
+            // Upload para S3
+            const uploadResult = await s3Service.uploadReport(
+              fileBuffer,
               customerId,
-              reportUrl: uploadResult.url,
-              reportTimestamp: new Date(reportTimestamp),
-              observations
-            },
-            include: {
-              customer: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  nickname: true
+              fileName || `report_${Date.now()}.pdf`
+            );
+
+            // Cria registro no banco
+            const report = await prisma.report.create({
+              data: {
+                customerId,
+                reportUrl: uploadResult.url,
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                observations
+              },
+              include: {
+                customer: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    nickname: true
+                  }
                 }
               }
-            }
-          });
+            });
 
-          createdReports.push(report);
-          logger.info(`Relatório criado: ${report.id}`);
-        } catch (error) {
-          errors.push({ customerId, error: error.message });
+            createdReports.push(report);
+          } catch (error) {
+            errors.push({ customerId, error: error.message });
+          }
         }
-      }
 
-      res.status(201).json({
-        message: `${createdReports.length} relatório(s) criado(s)`,
-        data: createdReports,
-        errors: errors.length > 0 ? errors : undefined
-      });
-    } catch (error) {
-      logger.error(`Erro ao criar relatórios: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao criar relatórios' });
-    }
+        return this.successResponse(
+          res,
+          { reports: createdReports, errors: errors.length > 0 ? errors : undefined },
+          `${createdReports.length} relatório(s) criado(s)`,
+          201
+        );
+      },
+      'criar relatórios'
+    );
   }
 
   /**
@@ -200,38 +194,43 @@ class ReportController {
    * PUT /api/report?id=report_id
    */
   async update(req, res) {
-    try {
-      const { id } = req.query;
-      const { reportTimestamp, observations, isActive } = req.body;
+    return this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { id } = req.query;
+        const { startDate, endDate, observations, isActive } = req.body;
 
-      if (!id) {
-        return res.status(400).json({ error: 'ID do relatório é obrigatório' });
-      }
-
-      const updateData = {};
-      if (reportTimestamp !== undefined) {
-        updateData.reportTimestamp = new Date(reportTimestamp);
-      }
-      if (observations !== undefined) updateData.observations = observations;
-      if (isActive !== undefined) updateData.isActive = isActive;
-
-      const report = await prisma.report.update({
-        where: { id },
-        data: updateData,
-        include: {
-          customer: true
+        if (!id || !isValidUUID(id)) {
+          return this.errorResponse(res, 'ID inválido', 'ID do relatório é inválido', 400);
         }
-      });
 
-      logger.info(`Relatório atualizado: ${id}`);
-      res.json(report);
-    } catch (error) {
-      if (error.code === 'P2025') {
-        return res.status(404).json({ error: 'Relatório não encontrado' });
-      }
-      logger.error(`Erro ao atualizar relatório: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao atualizar relatório' });
-    }
+        const updateData = {};
+        if (startDate !== undefined) updateData.startDate = new Date(startDate);
+        if (endDate !== undefined) updateData.endDate = new Date(endDate);
+        if (observations !== undefined) updateData.observations = observations;
+        if (isActive !== undefined) updateData.isActive = isActive;
+
+        // Valida range de datas se ambos fornecidos
+        if (startDate && endDate) {
+          const dateValidation = validateDateRange(startDate, endDate);
+          if (!dateValidation.valid) {
+            return this.errorResponse(res, 'Dados inválidos', dateValidation.error, 400);
+          }
+        }
+
+        const report = await prisma.report.update({
+          where: { id },
+          data: updateData,
+          include: {
+            customer: true
+          }
+        });
+
+        return this.successResponse(res, { report }, 'Relatório atualizado com sucesso');
+      },
+      'atualizar relatório'
+    );
   }
 
   /**
@@ -239,42 +238,47 @@ class ReportController {
    * DELETE /api/report?id=report_id&deleteFromS3=true
    */
   async delete(req, res) {
-    try {
-      const { id } = req.query;
-      const deleteFromS3 = req.query.deleteFromS3 === 'true';
+    return this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { id } = req.query;
+        const deleteFromS3 = req.query.deleteFromS3 === 'true';
 
-      if (!id) {
-        return res.status(400).json({ error: 'ID do relatório é obrigatório' });
-      }
-
-      const report = await prisma.report.findUnique({
-        where: { id }
-      });
-
-      if (!report) {
-        return res.status(404).json({ error: 'Relatório não encontrado' });
-      }
-
-      // Soft delete no banco
-      await prisma.report.update({
-        where: { id },
-        data: { isActive: false }
-      });
-
-      // Se solicitado, remove do S3
-      if (deleteFromS3) {
-        const key = s3Service.extractKeyFromUrl(report.reportUrl);
-        if (key) {
-          await s3Service.deleteReport(key);
+        if (!id || !isValidUUID(id)) {
+          return this.errorResponse(res, 'ID inválido', 'ID do relatório é inválido', 400);
         }
-      }
 
-      logger.info(`Relatório removido: ${id}${deleteFromS3 ? ' (incluindo S3)' : ''}`);
-      res.json({ message: 'Relatório removido com sucesso' });
-    } catch (error) {
-      logger.error(`Erro ao remover relatório: ${error.message}`);
-      res.status(500).json({ error: 'Erro ao remover relatório' });
-    }
+        const report = await prisma.report.findUnique({
+          where: { id }
+        });
+
+        if (!report) {
+          return this.errorResponse(res, 'Relatório não encontrado', 'Relatório não existe ou foi removido', 404);
+        }
+
+        // Soft delete no banco
+        await prisma.report.update({
+          where: { id },
+          data: { isActive: false }
+        });
+
+        // Se solicitado, remove do S3
+        if (deleteFromS3) {
+          const key = s3Service.extractKeyFromUrl(report.reportUrl);
+          if (key) {
+            await s3Service.deleteReport(key);
+          }
+        }
+
+        return this.successResponse(
+          res,
+          null,
+          `Relatório removido com sucesso${deleteFromS3 ? ' (incluindo S3)' : ''}`
+        );
+      },
+      'remover relatório'
+    );
   }
 }
 

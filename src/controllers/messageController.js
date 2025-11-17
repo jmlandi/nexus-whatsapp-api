@@ -125,11 +125,11 @@ class MessageController {
 
       // Busca número de telefone no banco
       const phoneNumberRecord = await prisma.phoneNumber.findFirst({
-        where: { 
+        where: {
           phoneNumber: {
             contains: from.slice(-10) // Últimos 10 dígitos
           },
-          isActive: true 
+          isActive: true
         },
         include: {
           customer: true
@@ -138,23 +138,17 @@ class MessageController {
 
       if (!phoneNumberRecord) {
         logger.warn(`Número não encontrado no sistema: ${from}`);
-        
+
         // Envia mensagem informando que o número não está cadastrado
-        await whatsappService.sendMessage(
-          from,
-          'Desculpe, este número não está cadastrado em nosso sistema.'
-        );
-        
-        return res.status(200).json({ 
+        await whatsappService.sendMessage(from, 'Desculpe, este número não está cadastrado em nosso sistema.');
+
+        return res.status(200).json({
           message: 'Número não cadastrado - mensagem informativa enviada'
         });
       }
 
       // Busca ou cria chat
-      const chat = await chatService.getOrCreateChat(
-        phoneNumberRecord.customerId,
-        phoneNumberRecord.id
-      );
+      const chat = await chatService.getOrCreateChat(phoneNumberRecord.customerId, phoneNumberRecord.id);
 
       // Adiciona mensagem ao chat
       const chatMessage = await chatService.addMessage(chat.id, messageBody, 'user');
@@ -167,11 +161,7 @@ class MessageController {
       });
 
       // Processa mensagem com IA e envia resposta automaticamente (assíncrono)
-      chatService.processMessageAsync(
-        chat,
-        messageBody,
-        from
-      );
+      chatService.processMessageAsync(chat, messageBody, from);
 
       // Responde imediatamente ao WhatsApp (webhook deve responder rápido)
       res.status(200).json({

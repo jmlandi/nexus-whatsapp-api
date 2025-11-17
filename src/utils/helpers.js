@@ -44,10 +44,10 @@ function isValidPhoneNumber(phoneNumber) {
 function formatWhatsAppNumber(phoneNumber) {
   // Remove espaços e caracteres especiais exceto +
   const cleaned = phoneNumber.replace(/[^\d+]/g, '');
-  
+
   // Adiciona + se não tiver
   const withPlus = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
-  
+
   // Adiciona prefixo whatsapp: se não tiver
   return withPlus.startsWith('whatsapp:') ? withPlus : `whatsapp:${withPlus}`;
 }
@@ -59,7 +59,7 @@ function formatWhatsAppNumber(phoneNumber) {
  */
 function sanitizeString(str) {
   if (typeof str !== 'string') return str;
-  
+
   return str
     .trim()
     .replace(/[<>]/g, '') // Remove < e >
@@ -98,13 +98,13 @@ function createValidationError(field, message) {
  */
 function validateRequiredFields(data, requiredFields) {
   const errors = [];
-  
+
   for (const field of requiredFields) {
     if (data[field] === undefined || data[field] === null || data[field] === '') {
       errors.push(createValidationError(field, `${field} é obrigatório`));
     }
   }
-  
+
   return errors;
 }
 
@@ -142,7 +142,7 @@ function extractPaginationParams(query, defaultLimit = 20, maxLimit = 100) {
   const requestedLimit = parseInt(query.limit) || defaultLimit;
   const limit = Math.min(requestedLimit, maxLimit);
   const skip = (page - 1) * limit;
-  
+
   return { page, limit, skip };
 }
 
@@ -167,7 +167,7 @@ function generateUniqueFileName(originalName) {
   const extension = originalName.split('.').pop();
   const nameWithoutExt = originalName.replace(`.${extension}`, '');
   const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '_');
-  
+
   return `${sanitized}_${timestamp}.${extension}`;
 }
 
@@ -216,20 +216,20 @@ function sleep(ms) {
  */
 async function retryWithBackoff(fn, maxRetries = 3, delay = 1000) {
   let lastError;
-  
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error;
-      
+
       if (i < maxRetries - 1) {
         const backoffDelay = delay * Math.pow(2, i);
         await sleep(backoffDelay);
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -240,17 +240,17 @@ module.exports = {
   isValidPhoneNumber,
   isValidDate,
   validateRequiredFields,
-  
+
   // Formatters
   formatWhatsAppNumber,
   sanitizeString,
   formatPaginatedResponse,
   generateUniqueFileName,
-  
+
   // Parsers
   extractPaginationParams,
   base64ToBuffer,
-  
+
   // Utilities
   createValidationError,
   getMinutesDifference,

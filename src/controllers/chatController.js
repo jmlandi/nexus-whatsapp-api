@@ -59,8 +59,8 @@ class ChatController {
       const { customerId, phoneNumberId, templateName, languageCode, components } = req.body;
 
       if (!customerId || !phoneNumberId || !templateName) {
-        return res.status(400).json({ 
-          error: 'customerId, phoneNumberId e templateName são obrigatórios' 
+        return res.status(400).json({
+          error: 'customerId, phoneNumberId e templateName são obrigatórios'
         });
       }
 
@@ -84,9 +84,9 @@ class ChatController {
 
       // Verifica se já existe chat aberto
       let chat = await chatService.getOpenChat(customerId, phoneNumberId);
-      
+
       if (chat) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Já existe um chat aberto para este cliente e número',
           chatId: chat.id
         });
@@ -104,11 +104,7 @@ class ChatController {
       );
 
       // Registra mensagem no chat
-      await chatService.addMessage(
-        chat.id,
-        `Template enviado: ${templateName}`,
-        'wa_template'
-      );
+      await chatService.addMessage(chat.id, `Template enviado: ${templateName}`, 'wa_template');
 
       logger.info(`Template enviado para iniciar chat ${chat.id}`);
 
@@ -134,7 +130,7 @@ class ChatController {
       const maxLimit = parseInt(process.env.MAX_PAGE_SIZE) || 100;
       const isOpen = req.query.isOpen;
       const customerId = req.query.customerId;
-      
+
       const pageSize = Math.min(limit, maxLimit);
       const skip = (page - 1) * pageSize;
 
@@ -226,8 +222,8 @@ class ChatController {
       const { chatId, message } = req.body;
 
       if (!chatId || !message) {
-        return res.status(400).json({ 
-          error: 'chatId e message são obrigatórios' 
+        return res.status(400).json({
+          error: 'chatId e message são obrigatórios'
         });
       }
 
@@ -249,17 +245,10 @@ class ChatController {
       }
 
       // Envia mensagem via WhatsApp
-      const whatsappResponse = await whatsappService.sendMessage(
-        chat.phoneNumber.phoneNumber,
-        message
-      );
+      const whatsappResponse = await whatsappService.sendMessage(chat.phoneNumber.phoneNumber, message);
 
       // Registra mensagem no chat
-      const chatMessage = await chatService.addMessage(
-        chatId,
-        message,
-        'agent'
-      );
+      const chatMessage = await chatService.addMessage(chatId, message, 'agent');
 
       logger.info(`Mensagem enviada no chat ${chatId}`);
 

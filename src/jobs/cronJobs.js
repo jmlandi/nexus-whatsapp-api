@@ -13,14 +13,14 @@ const logger = require('../utils/logger');
  */
 function scheduleCloseStaleChats() {
   const timeoutMinutes = parseInt(process.env.CHAT_TIMEOUT_MINUTES) || 15;
-  
+
   // Executa a cada 5 minutos
   cron.schedule('*/5 * * * *', async () => {
     try {
       logger.info('Executando job: fechar chats inativos');
-      
+
       const closedCount = await chatService.closeStaleChats(timeoutMinutes);
-      
+
       if (closedCount > 0) {
         logger.info(`Job concluído: ${closedCount} chat(s) fechado(s)`);
       }
@@ -37,7 +37,7 @@ function scheduleCloseStaleChats() {
  */
 function startCronJobs() {
   scheduleCloseStaleChats();
-  
+
   // Adicione outros cron jobs aqui conforme necessário
   // Exemplo:
   // scheduleReportReminders();

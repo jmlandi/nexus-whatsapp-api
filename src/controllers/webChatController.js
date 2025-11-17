@@ -15,7 +15,7 @@ class WebChatController {
    */
   async createSession(req, res) {
     try {
-      const { name, email, customerId } = req.body;
+      const { name, customerId } = req.body;
 
       let customer;
       let phoneNumber;
@@ -85,7 +85,7 @@ class WebChatController {
       // Mensagem de boas-vindas
       const customerName = customer.nickname || customer.firstName;
       const welcomeMessage = `Olá ${customerName}! 👋 Sou o Nexus, assistente de IA da WN7 Marketing.\n\nComo posso ajudar você hoje?`;
-      
+
       await prisma.chatMessage.create({
         data: {
           chatId: chat.id,
@@ -118,8 +118,8 @@ class WebChatController {
       const { sessionId, message } = req.body;
 
       if (!sessionId || !message) {
-        return res.status(400).json({ 
-          error: 'sessionId e message são obrigatórios' 
+        return res.status(400).json({
+          error: 'sessionId e message são obrigatórios'
         });
       }
 
@@ -158,8 +158,9 @@ class WebChatController {
 
       // Verifica se IA está configurada
       if (!aiService.isConfigured()) {
-        const fallbackMessage = 'Desculpe, o serviço de IA não está configurado no momento. Por favor, entre em contato com o suporte.';
-        
+        const fallbackMessage =
+          'Desculpe, o serviço de IA não está configurado no momento. Por favor, entre em contato com o suporte.';
+
         await prisma.chatMessage.create({
           data: {
             chatId: chat.id,
@@ -176,11 +177,7 @@ class WebChatController {
 
       // Gera resposta com IA
       try {
-        const aiResponse = await aiService.generateResponse(
-          message,
-          chat.customerId,
-          chat.id
-        );
+        const aiResponse = await aiService.generateResponse(message, chat.customerId, chat.id);
 
         // Salva resposta da IA
         await prisma.chatMessage.create({
@@ -199,9 +196,10 @@ class WebChatController {
         });
       } catch (aiError) {
         logger.error(`Erro na IA: ${aiError.message}`);
-        
-        const fallbackMessage = 'Desculpe, tive dificuldades técnicas. Um membro da equipe WN7 entrará em contato em breve! 😊';
-        
+
+        const fallbackMessage =
+          'Desculpe, tive dificuldades técnicas. Um membro da equipe WN7 entrará em contato em breve! 😊';
+
         await prisma.chatMessage.create({
           data: {
             chatId: chat.id,

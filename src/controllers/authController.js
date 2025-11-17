@@ -55,9 +55,9 @@ const login = async (req, res) => {
     // Gera o token
     const token = generateToken(user);
 
-    logger.info('Login realizado com sucesso', { 
-      userId: user.id, 
-      email: user.email 
+    logger.info('Login realizado com sucesso', {
+      userId: user.id,
+      email: user.email
     });
 
     res.json({
@@ -121,9 +121,9 @@ const register = async (req, res) => {
     // Gera o token
     const token = generateToken(user);
 
-    logger.info('Novo usuário registrado', { 
-      userId: user.id, 
-      email: user.email 
+    logger.info('Novo usuário registrado', {
+      userId: user.id,
+      email: user.email
     });
 
     res.status(201).json({
