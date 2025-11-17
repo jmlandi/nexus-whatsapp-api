@@ -19,11 +19,28 @@ let pdfParse = null;
 const loadPDFParse = async () => {
   if (!pdfParse) {
     try {
-      const pdfParseModule = require('pdf-parse');
-      // pdf-parse exports the function directly
-      pdfParse = pdfParseModule.default || pdfParseModule;
+      pdfParse = require('pdf-parse');
       console.log('✅ PDF-parse library loaded successfully');
       console.log('Type of pdfParse:', typeof pdfParse);
+      console.log('Keys of pdfParse:', Object.keys(pdfParse));
+      
+      // If it's an object with a default property, use that
+      if (typeof pdfParse === 'object' && pdfParse.default) {
+        console.log('Using pdfParse.default');
+        pdfParse = pdfParse.default;
+      }
+      // If it's an object but callable, it might have a parse method
+      else if (typeof pdfParse === 'object' && typeof pdfParse.parse === 'function') {
+        console.log('Using pdfParse.parse method');
+        pdfParse = pdfParse.parse;
+      }
+      // If it's still not a function, something is wrong
+      if (typeof pdfParse !== 'function') {
+        console.error('❌ pdfParse is not a function after loading, type:', typeof pdfParse);
+        throw new Error(`PDF parser is not a function, got type: ${typeof pdfParse}`);
+      }
+      
+      console.log('Final type of pdfParse:', typeof pdfParse);
       logger.info('PDF-parse library loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load pdf-parse:', error.message);
@@ -125,7 +142,7 @@ class PDFService {
       // Lazy-load pdf-parse only when needed
       const parser = await loadPDFParse();
       console.log('📖 About to call parser function, type:', typeof parser);
-      
+
       const data = await parser(pdfBuffer);
       console.log('✅ Parser executed successfully');
 
