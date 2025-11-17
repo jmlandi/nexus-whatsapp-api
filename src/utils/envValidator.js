@@ -63,26 +63,26 @@ const REQUIRED_ENV_VARS = [
   {
     name: 'WHATSAPP_PHONE_NUMBER_ID',
     description: 'WhatsApp Business phone number ID',
-    validate: value => value && value.length > 0,
-    critical: true
+    validate: value => !value || value.length > 0,
+    critical: false
   },
   {
     name: 'WHATSAPP_BUSINESS_ACCOUNT_ID',
     description: 'WhatsApp Business account ID',
-    validate: value => value && value.length > 0,
-    critical: true
+    validate: value => !value || value.length > 0,
+    critical: false
   },
   {
     name: 'WHATSAPP_ACCESS_TOKEN',
     description: 'WhatsApp Business API access token',
-    validate: value => value && value.length > 50,
-    critical: true
+    validate: value => !value || value.length > 50,
+    critical: false
   },
   {
     name: 'WHATSAPP_WEBHOOK_VERIFY_TOKEN',
     description: 'WhatsApp webhook verification token',
-    validate: value => value && value.length > 0,
-    critical: true
+    validate: value => !value || value.length > 0,
+    critical: false
   },
 
   // AWS S3
