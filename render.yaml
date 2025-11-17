@@ -50,7 +50,7 @@ services:
       
       # AWS S3 Configuration - SET THESE IN RENDER DASHBOARD
       - key: AWS_REGION
-        value: us-east-1
+        sync: false # Set manually in Render dashboard
       
       - key: AWS_ACCESS_KEY_ID
         sync: false # Secret - set manually in Render dashboard
