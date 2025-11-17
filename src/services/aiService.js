@@ -104,8 +104,11 @@ class AIService {
 
           // Tenta extrair conteúdo do PDF
           try {
+            console.log('📄 Processing PDF for report:', report.id);
+            console.log('📍 PDF URL:', report.reportUrl);
             logger.info(`Extraindo conteúdo do relatório: ${report.id}`);
             const pdfText = await pdfService.processPDF(report.reportUrl);
+            console.log('✅ PDF processed successfully, text length:', pdfText.length);
 
             // Limita a 6000 caracteres por relatório
             const limitedText =
@@ -116,6 +119,8 @@ class AIService {
             context += `\nConteúdo do Relatório:\n${limitedText}\n`;
             context += `\n${'='.repeat(60)}\n\n`;
           } catch (pdfError) {
+            console.error('❌ PDF processing error:', pdfError.message);
+            console.error('PDF Error stack:', pdfError.stack);
             logger.error(`Erro ao processar PDF ${report.id}: ${pdfError.message}`);
             context += '\n⚠️ Não foi possível extrair o conteúdo deste PDF.\n';
             context += `\n${'='.repeat(60)}\n\n`;

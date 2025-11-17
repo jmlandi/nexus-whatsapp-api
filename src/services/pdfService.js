@@ -151,11 +151,20 @@ class PDFService {
    */
   async processPDF(s3Url) {
     try {
+      console.log('🔵 PDFService.processPDF START');
+      console.log('S3 URL:', s3Url);
+      
       const pdfBuffer = await this.downloadPDFFromS3(s3Url);
+      console.log('✅ PDF downloaded, buffer size:', pdfBuffer.length);
+      
       const text = await this.extractTextFromPDF(pdfBuffer);
+      console.log('✅ Text extracted, length:', text.length);
+      console.log('🔵 PDFService.processPDF END');
 
       return text;
     } catch (error) {
+      console.error('❌ PDFService.processPDF ERROR:', error.message);
+      console.error('Error stack:', error.stack);
       logger.error(`Erro ao processar PDF: ${error.message}`);
       throw error;
     }
