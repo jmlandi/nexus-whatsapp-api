@@ -52,10 +52,16 @@ router.post('/chat', async (req, res) => {
 
     res.json({ response });
   } catch (error) {
-    logger.error(`Erro no simulador de chat: ${error.message}`);
+    logger.error('Erro no simulador de chat', {
+      error: error.message,
+      stack: error.stack,
+      customerId: req.body.customerId,
+      errorType: error.constructor.name
+    });
     res.status(500).json({
       error: 'Erro ao processar mensagem',
-      message: error.message
+      message: 'Ocorreu um erro interno. Tente novamente mais tarde.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
