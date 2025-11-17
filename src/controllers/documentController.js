@@ -3,25 +3,24 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const prisma = require('../utils/prisma');
 const logger = require('../utils/logger');
 
-// Configuração do S3
-const awsRegion = process.env.AWS_REGION || 'us-east-2';
-logger.info('Configurando S3 Client', { 
-  region: awsRegion,
-  bucket: process.env.AWS_S3_BUCKET_NAME,
-  hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
-  hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY
-});
-
-const s3Client = new S3Client({
-  region: awsRegion,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  },
-  // Força o uso do endpoint regional correto
-  forcePathStyle: false,
-  useAccelerateEndpoint: false
-});
+/**
+ * Cria um cliente S3 com a configuração atual
+ * Recria a cada chamada para garantir que usa as env vars corretas
+ */
+function getS3Client() {
+  const awsRegion = process.env.AWS_REGION || 'us-east-2';
+  
+  return new S3Client({
+    region: awsRegion,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+    // Força o uso do endpoint regional correto
+    forcePathStyle: false,
+    useAccelerateEndpoint: false
+  });
+}
 
 // Configuração do Multer para armazenar em memória
 const upload = multer({
@@ -86,6 +85,10 @@ const uploadDocument = async (req, res) => {
     const timestamp = Date.now();
     const fileName = `reports/${customerId}/${timestamp}-${file.originalname}`;
 
+    // Obtém região e cria cliente S3
+    const awsRegion = process.env.AWS_REGION || 'us-east-2';
+    const s3Client = getS3Client();
+
     // Upload para o S3
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -98,10 +101,16 @@ const uploadDocument = async (req, res) => {
       bucket: uploadParams.Bucket,
       key: uploadParams.Key,
       size: file.buffer.length,
-      region: awsRegion
+      region: awsRegion,
+      awsRegionEnv: process.env.AWS_REGION
     });
 
     await s3Client.send(new PutObjectCommand(uploadParams));
+
+    logger.info('Upload S3 bem-sucedido', { 
+      bucket: uploadParams.Bucket,
+      key: fileName 
+    });
 
     // URL do arquivo no S3
     const reportUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${awsRegion}.amazonaws.com/${fileName}`;
@@ -142,7 +151,10 @@ const uploadDocument = async (req, res) => {
       error: error.message,
       stack: error.stack,
       code: error.code,
-      name: error.name
+      name: error.name,
+      Code: error.Code,
+      awsRegion: process.env.AWS_REGION,
+      bucket: process.env.AWS_S3_BUCKET_NAME
     });
     
     // Retorna detalhes específicos baseado no tipo de erro
@@ -164,6 +176,9 @@ const uploadDocument = async (req, res) => {
     } else if (error.code === 'NetworkingError') {
       errorResponse.message = 'Erro de conexão com AWS S3';
       errorResponse.details = `Região: ${process.env.AWS_REGION}`;
+    } else if (error.Code === 'PermanentRedirect' || error.message?.includes('endpoint')) {
+      errorResponse.message = 'Erro de região do bucket S3';
+      errorResponse.details = `Bucket ${process.env.AWS_S3_BUCKET_NAME} não está na região ${process.env.AWS_REGION}. Verifique a região correta no AWS Console.`;
     } else if (error.message) {
       errorResponse.details = error.message;
     }
