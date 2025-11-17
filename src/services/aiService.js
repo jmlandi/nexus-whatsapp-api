@@ -198,20 +198,21 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
 
     } catch (error) {
       // Log detalhado para debugging em produção
+      const errorDetails = {
+        message: error.message,
+        type: error.constructor.name,
+        status: error.status || 'N/A',
+        error: error.error || null,
+        response: error.response?.data || null,
+        stack: error.stack
+      };
+      
+      console.error('=== ERRO AO GERAR RESPOSTA COM IA ===');
+      console.error(JSON.stringify(errorDetails, null, 2));
+      console.error('======================================');
+      
       logger.error('=== ERRO AO GERAR RESPOSTA COM IA ===');
-      logger.error(`Mensagem: ${error.message}`);
-      logger.error(`Tipo: ${error.constructor.name}`);
-      logger.error(`Status: ${error.status || 'N/A'}`);
-      
-      if (error.error) {
-        logger.error(`Detalhes do erro: ${JSON.stringify(error.error)}`);
-      }
-      
-      if (error.response) {
-        logger.error(`Response: ${JSON.stringify(error.response.data)}`);
-      }
-      
-      logger.error(`Stack: ${error.stack}`);
+      logger.error(JSON.stringify(errorDetails, null, 2));
       logger.error('======================================');
       
       // Resposta fallback em caso de erro
@@ -229,8 +230,14 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
    * @returns {Promise<string>} Resposta gerada pela IA
    */
   async generateSimulatedResponse(userMessage, customerId, history = []) {
+    console.log('🤖 generateSimulatedResponse chamado');
+    console.log(`Customer ID: ${customerId}`);
+    console.log(`Mensagem: ${userMessage}`);
+    console.log(`História: ${history.length} mensagens`);
+    
     try {
       // Busca contexto do cliente
+      console.log('📋 Buscando contexto do cliente...');
       const customerContext = await this.getCustomerContext(customerId);
 
       // Monta o system prompt
@@ -270,6 +277,10 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       ];
 
       // Chama a API do Claude
+      console.log('☁️ Chamando Anthropic API...');
+      console.log(`Modelo: ${this.model}`);
+      console.log(`Max tokens: ${this.maxTokens}`);
+      
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: this.maxTokens,
@@ -280,25 +291,29 @@ Lembre-se: você está conversando via WhatsApp, então seja direto e objetivo, 
       // Extrai o texto da resposta
       const aiResponse = response.content[0].text;
 
+      console.log('✅ Resposta gerada com sucesso');
+      console.log(`Tamanho da resposta: ${aiResponse.length} caracteres`);
+      
       logger.info(`Resposta simulada gerada para cliente ${customerId}`);
       return aiResponse;
 
     } catch (error) {
       // Log detalhado para debugging em produção
+      const errorDetails = {
+        message: error.message,
+        type: error.constructor.name,
+        status: error.status || 'N/A',
+        error: error.error || null,
+        response: error.response?.data || null,
+        stack: error.stack
+      };
+      
+      console.error('=== ERRO AO GERAR RESPOSTA SIMULADA ===');
+      console.error(JSON.stringify(errorDetails, null, 2));
+      console.error('========================================');
+      
       logger.error('=== ERRO AO GERAR RESPOSTA SIMULADA ===');
-      logger.error(`Mensagem: ${error.message}`);
-      logger.error(`Tipo: ${error.constructor.name}`);
-      logger.error(`Status: ${error.status || 'N/A'}`);
-      
-      if (error.error) {
-        logger.error(`Detalhes do erro: ${JSON.stringify(error.error)}`);
-      }
-      
-      if (error.response) {
-        logger.error(`Response: ${JSON.stringify(error.response.data)}`);
-      }
-      
-      logger.error(`Stack: ${error.stack}`);
+      logger.error(JSON.stringify(errorDetails, null, 2));
       logger.error('========================================');
       
       // Resposta fallback em caso de erro
