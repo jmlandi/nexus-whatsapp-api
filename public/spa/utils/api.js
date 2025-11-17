@@ -32,7 +32,7 @@ async function apiRequest(endpoint, options = {}) {
     if (options.body && !(options.body instanceof FormData)) {
       console.log('📤 Request body:', JSON.stringify(JSON.parse(options.body), null, 2));
     }
-    
+
     const response = await fetch(endpoint, config);
 
     // Check content type before parsing
