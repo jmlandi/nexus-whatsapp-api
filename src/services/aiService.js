@@ -20,7 +20,7 @@ class AIService {
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY
     });
-    this.model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+    this.model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
     this.maxTokens = parseInt(process.env.ANTHROPIC_MAX_TOKENS) || 1024;
     
     logger.info(`AIService inicializado - Modelo: ${this.model}, MaxTokens: ${this.maxTokens}`);
