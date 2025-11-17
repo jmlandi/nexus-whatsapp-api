@@ -30,6 +30,18 @@ const { setupGracefulShutdown } = require('./utils/gracefulShutdown');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Log ALL incoming requests FIRST
+app.use((req, res, next) => {
+  console.log('========== INCOMING REQUEST ==========');
+  console.log('Time:', new Date().toISOString());
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Path:', req.path);
+  console.log('IP:', req.ip);
+  console.log('======================================');
+  next();
+});
+
 // Compression middleware - gzip responses
 app.use(compression());
 

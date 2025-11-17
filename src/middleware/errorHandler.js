@@ -36,6 +36,13 @@ class AppError extends Error {
  * @param {Function} _next - Express next function (unused in error handlers)
  */
 const errorHandler = (err, req, res, _next) => {
+  console.error('========== GLOBAL ERROR HANDLER ==========');
+  console.error('Path:', req.path);
+  console.error('Method:', req.method);
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  console.error('Status:', err.statusCode || 500);
+
   // Default error properties
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Erro interno do servidor';
