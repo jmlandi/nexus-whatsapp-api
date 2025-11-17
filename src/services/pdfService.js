@@ -15,18 +15,23 @@ const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const logger = require('../utils/logger');
 
 // Lazy-load pdf-parse to avoid Node.js compatibility issues on startup
-let PDFParse = null;
+let pdfParse = null;
 const loadPDFParse = async () => {
-  if (!PDFParse) {
+  if (!pdfParse) {
     try {
-      PDFParse = require('pdf-parse');
+      const pdfParseModule = require('pdf-parse');
+      // pdf-parse exports the function directly
+      pdfParse = pdfParseModule.default || pdfParseModule;
+      console.log('✅ PDF-parse library loaded successfully');
+      console.log('Type of pdfParse:', typeof pdfParse);
       logger.info('PDF-parse library loaded successfully');
     } catch (error) {
+      console.error('❌ Failed to load pdf-parse:', error.message);
       logger.error('Failed to load pdf-parse library', { error: error.message });
       throw new Error('PDF processing library not available');
     }
   }
-  return PDFParse;
+  return pdfParse;
 };
 
 class PDFService {
@@ -119,7 +124,10 @@ class PDFService {
 
       // Lazy-load pdf-parse only when needed
       const parser = await loadPDFParse();
+      console.log('📖 About to call parser function, type:', typeof parser);
+      
       const data = await parser(pdfBuffer);
+      console.log('✅ Parser executed successfully');
 
       if (!data || !data.text) {
         throw new Error('No text content extracted from PDF');
@@ -153,10 +161,10 @@ class PDFService {
     try {
       console.log('🔵 PDFService.processPDF START');
       console.log('S3 URL:', s3Url);
-      
+
       const pdfBuffer = await this.downloadPDFFromS3(s3Url);
       console.log('✅ PDF downloaded, buffer size:', pdfBuffer.length);
-      
+
       const text = await this.extractTextFromPDF(pdfBuffer);
       console.log('✅ Text extracted, length:', text.length);
       console.log('🔵 PDFService.processPDF END');
