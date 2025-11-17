@@ -7,6 +7,16 @@ const logger = require('../utils/logger');
 const whatsappService = require('../services/whatsappService');
 
 class TemplateController {
+  constructor() {
+    // Bind all methods to preserve 'this' context when used as Express route handlers
+    const methodNames = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(
+      name => name !== 'constructor' && typeof this[name] === 'function'
+    );
+    methodNames.forEach(name => {
+      this[name] = this[name].bind(this);
+    });
+  }
+
   /**
    * Cria um novo template de mensagem no WhatsApp
    * POST /api/template

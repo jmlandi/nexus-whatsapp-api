@@ -21,6 +21,7 @@ RUN npx prisma generate
 # Copia código da aplicação e arquivos públicos
 COPY src ./src
 COPY public ./public
+COPY scripts ./scripts
 
 # Cria diretório de logs
 RUN mkdir -p logs

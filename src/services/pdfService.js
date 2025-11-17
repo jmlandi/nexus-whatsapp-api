@@ -116,7 +116,7 @@ class PDFService {
       }
 
       logger.info('Starting PDF text extraction...');
-      
+
       // Lazy-load pdf-parse only when needed
       const parser = await loadPDFParse();
       const data = await parser(pdfBuffer);

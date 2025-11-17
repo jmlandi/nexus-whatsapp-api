@@ -80,11 +80,16 @@ function setupGracefulShutdown(server) {
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection', {
-      reason,
-      promise
+    logger.error('Unhandled Promise Rejection', {
+      reason: reason instanceof Error ? {
+        message: reason.message,
+        stack: reason.stack,
+        name: reason.name
+      } : reason,
+      promiseDetails: String(promise)
     });
-    gracefulShutdown('UNHANDLED_REJECTION', server);
+    // Don't shutdown the server for unhandled rejections in production
+    // Just log them so we can investigate and fix the root cause
   });
 
   logger.info('Graceful shutdown handlers registered');

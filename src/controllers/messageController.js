@@ -9,6 +9,16 @@ const chatService = require('../services/chatService');
 const whatsappService = require('../services/whatsappService');
 
 class MessageController {
+  constructor() {
+    // Bind all methods to preserve 'this' context when used as Express route handlers
+    const methodNames = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(
+      name => name !== 'constructor' && typeof this[name] === 'function'
+    );
+    methodNames.forEach(name => {
+      this[name] = this[name].bind(this);
+    });
+  }
+
   /**
    * Lista mensagens de um chat específico com paginação
    * GET /api/message?chat_id=chat_id

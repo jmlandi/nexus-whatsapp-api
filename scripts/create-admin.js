@@ -8,7 +8,7 @@ async function createAdminUser() {
   try {
     // Verifica se já existe algum usuário
     const existingUsers = await prisma.user.count();
-    
+
     if (existingUsers > 0) {
       console.log('✅ Já existem usuários cadastrados');
       process.exit(0);
@@ -16,7 +16,7 @@ async function createAdminUser() {
 
     // Cria o usuário admin
     const hashedPassword = await bcrypt.hash('admin123', 10);
-    
+
     const admin = await prisma.user.create({
       data: {
         email: 'admin@nexus.com',
@@ -32,7 +32,7 @@ async function createAdminUser() {
     console.log('🔑 Senha: admin123');
     console.log('');
     console.log('⚠️  IMPORTANTE: Altere a senha após o primeiro login!');
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Erro ao criar usuário admin:', error);

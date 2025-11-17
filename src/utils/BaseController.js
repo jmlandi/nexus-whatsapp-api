@@ -20,6 +20,18 @@
 const logger = require('./logger');
 
 class BaseController {
+  constructor() {
+    // Automatically bind all methods to preserve 'this' context when used as Express route handlers
+    const prototype = Object.getPrototypeOf(this);
+    const methodNames = Object.getOwnPropertyNames(prototype).filter(
+      name => name !== 'constructor' && typeof this[name] === 'function'
+    );
+
+    methodNames.forEach(name => {
+      this[name] = this[name].bind(this);
+    });
+  }
+
   /**
    * Parses pagination parameters from request query
    *

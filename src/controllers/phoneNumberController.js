@@ -8,6 +8,16 @@ const logger = require('../utils/logger');
 const whatsappService = require('../services/whatsappService');
 
 class PhoneNumberController {
+  constructor() {
+    // Bind all methods to preserve 'this' context when used as Express route handlers
+    const methodNames = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(
+      name => name !== 'constructor' && typeof this[name] === 'function'
+    );
+    methodNames.forEach(name => {
+      this[name] = this[name].bind(this);
+    });
+  }
+
   /**
    * Lista todos os números com paginação
    * GET /api/phone_number
