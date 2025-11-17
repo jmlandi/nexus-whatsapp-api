@@ -14,44 +14,22 @@
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const logger = require('../utils/logger');
 
-// Lazy-load pdf-parse to avoid Node.js compatibility issues on startup
-let pdfParse = null;
-const loadPDFParse = async () => {
-  if (!pdfParse) {
+// Use pdfjs-dist instead of pdf-parse for better reliability
+let pdfjsLib = null;
+const loadPDFJS = async () => {
+  if (!pdfjsLib) {
     try {
-      pdfParse = require('pdf-parse');
-      console.log('✅ PDF-parse library loaded successfully');
-      console.log('Type of pdfParse:', typeof pdfParse);
-      console.log('Keys of pdfParse:', Object.keys(pdfParse));
-      
-      // If it's an object with a default property, use that
-      if (typeof pdfParse === 'object' && pdfParse.default) {
-        console.log('Using pdfParse.default');
-        pdfParse = pdfParse.default;
-      }
-      // If it's an object but callable, it might have a parse method
-      else if (typeof pdfParse === 'object' && typeof pdfParse.parse === 'function') {
-        console.log('Using pdfParse.parse method');
-        pdfParse = pdfParse.parse;
-      }
-      // If it's still not a function, something is wrong
-      if (typeof pdfParse !== 'function') {
-        console.error('❌ pdfParse is not a function after loading, type:', typeof pdfParse);
-        throw new Error(`PDF parser is not a function, got type: ${typeof pdfParse}`);
-      }
-      
-      console.log('Final type of pdfParse:', typeof pdfParse);
-      logger.info('PDF-parse library loaded successfully');
+      pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+      console.log('✅ pdfjs-dist library loaded successfully');
+      logger.info('pdfjs-dist library loaded successfully');
     } catch (error) {
-      console.error('❌ Failed to load pdf-parse:', error.message);
-      logger.error('Failed to load pdf-parse library', { error: error.message });
+      console.error('❌ Failed to load pdfjs-dist:', error.message);
+      logger.error('Failed to load pdfjs-dist library', { error: error.message });
       throw new Error('PDF processing library not available');
     }
   }
-  return pdfParse;
-};
-
-class PDFService {
+  return pdfjsLib;
+};class PDFService {
   /**
    * Initialize PDF Service with S3 client
    *
@@ -114,7 +92,7 @@ class PDFService {
   /**
    * Extract text content from PDF Buffer
    *
-   * Uses pdf-parse library to extract all text content from a PDF file.
+   * Uses pdfjs-dist library to extract all text content from a PDF file.
    * Returns raw text including page breaks and formatting artifacts.
    *
    * @async
@@ -130,7 +108,7 @@ class PDFService {
     try {
       // Validate that we received a valid buffer
       if (!Buffer.isBuffer(pdfBuffer)) {
-        throw new Error('Invalid input: expected Buffer, got ' + typeof pdfBuffer);
+        throw new Error(`Invalid input: expected Buffer, got ${typeof pdfBuffer}`);
       }
 
       if (pdfBuffer.length === 0) {
@@ -138,21 +116,42 @@ class PDFService {
       }
 
       logger.info('Starting PDF text extraction...');
+      console.log('📖 Loading PDF with pdfjs-dist...');
 
-      // Lazy-load pdf-parse only when needed
-      const parser = await loadPDFParse();
-      console.log('📖 About to call parser function, type:', typeof parser);
+      // Lazy-load pdfjs-dist only when needed
+      const pdfjsLib = await loadPDFJS();
 
-      const data = await parser(pdfBuffer);
-      console.log('✅ Parser executed successfully');
+      // Load the PDF document
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(pdfBuffer),
+        useSystemFonts: true,
+        standardFontDataUrl: null
+      });
 
-      if (!data || !data.text) {
+      const pdfDocument = await loadingTask.promise;
+      console.log('✅ PDF document loaded, pages:', pdfDocument.numPages);
+
+      let fullText = '';
+
+      // Extract text from each page
+      for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+        const page = await pdfDocument.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Combine all text items from the page
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n\n';
+      }
+
+      if (!fullText || fullText.trim().length === 0) {
         throw new Error('No text content extracted from PDF');
       }
 
-      logger.info(`Successfully extracted ${data.text.length} characters from PDF`);
-      return data.text;
+      console.log('✅ Text extracted successfully');
+      logger.info(`Successfully extracted ${fullText.length} characters from PDF`);
+      return fullText.trim();
     } catch (error) {
+      console.error('❌ PDF extraction error:', error.message);
       logger.error('Error extracting text from PDF', { error: error.message, stack: error.stack });
       throw error;
     }
