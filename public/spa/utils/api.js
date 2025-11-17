@@ -29,15 +29,40 @@ async function apiRequest(endpoint, options = {}) {
   
   try {
     const response = await fetch(endpoint, config);
-    const data = await response.json();
+    
+    // Tenta fazer parse do JSON
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      // Se não conseguir fazer parse, retorna texto
+      const text = await response.text();
+      console.error('Response is not JSON:', text);
+      throw new Error(`Erro na resposta do servidor: ${response.statusText || 'Unknown error'}`);
+    }
     
     if (!response.ok) {
-      throw new Error(data.message || data.error || 'Erro na requisição');
+      // Cria um erro customizado com informações completas
+      const error = new Error(data.message || data.error || 'Erro na requisição');
+      error.response = {
+        status: response.status,
+        statusText: response.statusText,
+        data: data
+      };
+      throw error;
     }
     
     return data;
   } catch (error) {
     console.error('API Error:', error);
+    // Se o erro não tem response, adiciona informações básicas
+    if (!error.response) {
+      error.response = {
+        status: undefined,
+        statusText: undefined,
+        data: undefined
+      };
+    }
     throw error;
   }
 }

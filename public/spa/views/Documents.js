@@ -169,6 +169,7 @@ const Documents = {
       this.uploading = true;
       
       try {
+        console.log('📤 Preparando upload...');
         const formData = new FormData();
         formData.append('file', this.uploadForm.file);
         formData.append('customerId', this.uploadForm.customerId);
@@ -178,7 +179,18 @@ const Documents = {
           formData.append('observations', this.uploadForm.observations);
         }
         
-        await api.post('/api/documents/upload', formData);
+        console.log('📤 Enviando para:', '/api/documents/upload');
+        console.log('📤 FormData:', {
+          file: this.uploadForm.file.name,
+          size: this.uploadForm.file.size,
+          type: this.uploadForm.file.type,
+          customerId: this.uploadForm.customerId,
+          startDate: this.uploadForm.startDate,
+          endDate: this.uploadForm.endDate
+        });
+        
+        const response = await api.post('/api/documents/upload', formData);
+        console.log('✅ Upload bem-sucedido:', response);
         
         store.showToast('Documento enviado com sucesso!', 'success');
         this.showUploadModal = false;
