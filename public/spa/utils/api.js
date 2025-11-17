@@ -30,23 +30,33 @@ async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(endpoint, config);
 
-    // Clone the response so we can read it multiple times if needed
-    const responseClone = response.clone();
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
 
-    // Tenta fazer parse do JSON
+    // Handle non-JSON responses (like HTML error pages)
+    if (!isJson) {
+      const text = await response.text();
+      const isHtml = text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html');
+
+      if (isHtml) {
+        console.error(`Server returned HTML instead of JSON (${response.status} ${response.statusText})`);
+      } else {
+        console.error('Non-JSON response:', text.substring(0, 200));
+      }
+
+      throw new Error(
+        `Erro no servidor: ${response.status} ${response.statusText || 'Erro desconhecido'}`
+      );
+    }
+
+    // Parse JSON response
     let data;
     try {
       data = await response.json();
     } catch (jsonError) {
-      // Se não conseguir fazer parse, usa o clone para ler como texto
-      try {
-        const text = await responseClone.text();
-        console.error('Response is not JSON:', text);
-        throw new Error(`Erro na resposta do servidor: ${response.statusText || 'Unknown error'}`);
-      } catch (textError) {
-        console.error('Could not read response as text:', textError);
-        throw new Error(`Erro na resposta do servidor: ${response.statusText || 'Unknown error'}`);
-      }
+      console.error('Failed to parse JSON response:', jsonError);
+      throw new Error(`Erro ao processar resposta do servidor: ${response.statusText || 'Invalid JSON'}`);
     }
 
     if (!response.ok) {

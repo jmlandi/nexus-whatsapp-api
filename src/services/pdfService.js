@@ -12,8 +12,22 @@
  */
 
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { PDFParse } = require('pdf-parse');
 const logger = require('../utils/logger');
+
+// Lazy-load pdf-parse to avoid Node.js compatibility issues on startup
+let PDFParse = null;
+const loadPDFParse = async () => {
+  if (!PDFParse) {
+    try {
+      PDFParse = require('pdf-parse');
+      logger.info('PDF-parse library loaded successfully');
+    } catch (error) {
+      logger.error('Failed to load pdf-parse library', { error: error.message });
+      throw new Error('PDF processing library not available');
+    }
+  }
+  return PDFParse;
+};
 
 class PDFService {
   /**
@@ -92,17 +106,30 @@ class PDFService {
    */
   async extractTextFromPDF(pdfBuffer) {
     try {
-      logger.info('Extraindo texto do PDF...');
+      // Validate that we received a valid buffer
+      if (!Buffer.isBuffer(pdfBuffer)) {
+        throw new Error('Invalid input: expected Buffer, got ' + typeof pdfBuffer);
+      }
 
-      const parser = new PDFParse({ data: pdfBuffer });
-      const result = await parser.getText();
+      if (pdfBuffer.length === 0) {
+        throw new Error('PDF buffer is empty');
+      }
 
-      logger.info(`Texto extraído: ${result.text.length} caracteres, ${result.numPages} páginas`);
+      logger.info('Starting PDF text extraction...');
+      
+      // Lazy-load pdf-parse only when needed
+      const parser = await loadPDFParse();
+      const data = await parser(pdfBuffer);
 
-      return result.text;
+      if (!data || !data.text) {
+        throw new Error('No text content extracted from PDF');
+      }
+
+      logger.info(`Successfully extracted ${data.text.length} characters from PDF`);
+      return data.text;
     } catch (error) {
-      logger.error(`Erro ao extrair texto do PDF: ${error.message}`);
-      throw new Error('Não foi possível extrair texto do PDF');
+      logger.error('Error extracting text from PDF', { error: error.message, stack: error.stack });
+      throw error;
     }
   }
 
